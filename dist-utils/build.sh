@@ -197,7 +197,9 @@ fi
 if [ $BUILD_EXIST == true ]; then
     echo "[SADE BUILD] building eXist"
     # we want xslfo, a diff/patch may be better than sed here
-    sed -i 's/include.module.xslfo = false/include.module.xslfo = true/g' $EXIST_SRC_LOC/extensions/build.properties
+    cp $EXIST_SRC_LOC/extensions/build.properties $EXIST_SRC_LOC/extensions/local.build.properties
+    #sed -i 's/include.module.xslfo = false/include.module.xslfo = true/g' $EXIST_SRC_LOC/extensions/local.build.properties
+    sed -i 's/include.module.cqlparser = false/include.module.cqlparser = true/g' $EXIST_SRC_LOC/extensions/local.build.properties
 
     cd $EXIST_SRC_LOC
 #      show svn rev (does not work with svn 1.7)
@@ -207,7 +209,7 @@ if [ $BUILD_EXIST == true ]; then
         ./build.sh clean
     fi 
     ./build.sh 
-    ./build.sh jnlp-sign-all dist-war
+    ./build.sh jnlp-all dist-war
 else
     echo "[SADE BUILD] everything in place, no need to rebuild eXist"
 fi
@@ -331,11 +333,12 @@ fi
 
 ###
 #
-# exist config modification
-# seems not neccessary in trunk anymore
+# exist config modification 
+# xslfo not needed anymore
 ###
-#cd $SCRIPTLOC
+cd $SCRIPTLOC
 #patch -p0 < sade-resources/existconf.xslfo.patch 
+patch -p0 < sade-resources/existconf.cqlparser.patch 
 
 ####
 #

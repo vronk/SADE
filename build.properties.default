@@ -4,3 +4,7 @@ app.name=SADE
 app.uri=http://telota.de/sade
 app.version=0.3
 projects.dir=sade-projects
+
+# set conf.overwrite to true if src/repo.xml, src/expath-pkg.xml and src/core/config.xql 
+# should be overwritten from their templates
+conf.overwrite=false
