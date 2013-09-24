@@ -1,3 +1,4 @@
+xquery version "3.0";
 module namespace repo-utils = "http://aac.ac.at/content_repository/utils";
 
 import module namespace xdb="http://exist-db.org/xquery/xmldb";
@@ -139,14 +140,25 @@ declare function repo-utils:is-in-cache($doc-name as xs:string,$config) as xs:bo
 
 
 declare function repo-utils:get-from-cache($doc-name as xs:string,$config) as item()* {
-      fn:doc(fn:concat(repo-utils:config-value($config, 'cache.path'), "/", $doc-name))
+    let $path := fn:concat(repo-utils:config-value($config, 'cache.path'), "/", $doc-name)
+    
+    return 
+        try {
+           if (doc-available($path)) then
+            fn:doc($path)
+            else ()
+        } catch * {         
+           if (util:binary-doc-available($path)) then
+                util:binary-doc($path)
+           else ()
+        }
 };
 
 (:~ Store the data in cache. Uses own writer-account
 :)
 declare function repo-utils:store-in-cache($doc-name as xs:string, $data as node(),$config) as item()* {
   
-  let $clarin-writer := fn:doc(repo-utils:config-value($config, 'writer')),
+  let $clarin-writer := fn:doc(repo-utils:config-value($config, 'writer.file')),
   $cache-path := repo-utils:config-value($config, 'cache.path'),
   $dummy := xdb:login($cache-path, $clarin-writer//write-user/text(), $clarin-writer//write-user-cred/text()),
   $store := (: util:catch("org.exist.xquery.XPathException", :) xdb:store($cache-path, $doc-name, $data), (: , ()) :)
@@ -173,10 +185,15 @@ return $store-result
 };
 :)
 
+(:~ Store the data somewhere (in $collection)
+checks for logged in user and only tries to use the internal writer, if no user logged in.
+:)
 (:<options><option key="update">yes</option></options>:)
-declare function repo-utils:store($collection as xs:string, $doc-name as xs:string, $data as node(), $overwrite as xs:boolean) as item()* {
-  let $clarin-writer := fn:doc("writer.xml"),
-  $dummy := xdb:login($collection, $clarin-writer//write-user/text(), $clarin-writer//write-user-cred/text())
+declare function repo-utils:store($collection as xs:string, $doc-name as xs:string, $data as node(), $overwrite as xs:boolean, $config) as item()* {
+  let $writer := fn:doc(repo-utils:config-value($config, 'writer.file')),
+  $dummy := if (request:get-attribute("org.exist.demo.login.user")='') then
+                xdb:login($collection, $writer//write-user/text(), $writer//write-user-cred/text())
+             else ()  
 
 (:  let $rem := if ($overwrite and doc-available(concat($collection, $doc-name))) then xdb:remove($collection, $doc-name) else () :)
 
