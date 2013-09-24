@@ -10,11 +10,11 @@ declare namespace sru = "http://www.loc.gov/zing/srw/";
 declare variable $smc:termsets := doc("data/termsets.xml");
 declare variable $smc:dcr-terms := doc("data/dcr-terms.xml");
 declare variable $smc:cmd-terms := doc("data/cmd-terms.xml");
+declare variable $smc:dcr-cmd-map := doc("data/dcr-cmd-map.xml");
+declare variable $smc:xsl-smc-op := doc("xsl/smc_op.xsl");
 declare variable $smc:xsl-terms2graph := doc("xsl/terms2graph.xsl");
 declare variable $smc:xsl-graph2json := doc("xsl/graph2json-d3.xsl");
 declare variable $smc:structure-file  := '_structure';
-
-
 
 
 (:~ mappings overview
@@ -87,7 +87,7 @@ declare function smc:gen-mappings($config, $x-context as xs:string+, $run-flag a
     
    
    let $mapsummaries := for $map in $mappings/descendant-or-self::map[@key]
-                let $map := smc:get-mappings($config, $map/xs:string(@key), true(), 'raw')
+                let $map := smc:get-mappings($config, $map/xs:string(@key), $run-flag, 'raw')
                 return <map count_profiles="{count($map/map)}" count_indexes="{count($map//index)}" >{($map/@*,
                             for $profile-map in $map/map 
                             return <map count_indexes="{count($profile-map/index)}" count_paths="{count($profile-map/index/path)}">{$profile-map/@*}</map>)}</map>
@@ -173,8 +173,9 @@ declare function smc:gen-graph($config, $x-context as xs:string+) as item()* {
     let $model := map { "config" := $config}
     let $cache-path := config:param-value($model, 'cache.path')
     let $smc-browser-path := config:param-value($model, 'smc-browser.path')
-    (:  beware of mixing in the already result (doc()/Termsets/Termset vs. doc()/Termset  :)
-    let $termsets := <Termsets>{collection($cache-path)/Termset}</Termsets>
+    (:  beware of mixing in the already result (doc()/Termsets/Termset vs. doc()/Termset 
+                    and the results from full analysis (whole tree starting from / - they have first level empty node! :)
+    let $termsets := <Termsets>{collection($cache-path)/Termset[Term/xs:string(@path)!='']}</Termsets>
     
     
     
