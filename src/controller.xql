@@ -3,6 +3,16 @@ xquery version "1.0";
 import module namespace config="http://exist-db.org/xquery/apps/config" at "core/config.xqm";
 import module namespace login="http://exist-db.org/xquery/login" at "resource:org/exist/xquery/modules/persistentlogin/login.xql";
 
+(:
+(\: 
+ : Reference to restxq added for smc restxq - Uses restxq to keep the code clean. 
+ : needs to be made more generic - avodi putting module-specific stuff into this main controller.  
+ :\)
+import module namespace restxq="http://exist-db.org/xquery/restxq" at "modules/smc/restxq.xql";
+import module namespace smcr="http://clarin.eu/smc/cx" at "modules/smc/smc-cx.xqm";
+
+:)
+
 declare variable $exist:path external;
 declare variable $exist:resource external;
 declare variable $exist:controller external;
@@ -45,12 +55,16 @@ if ($exist:path eq "/" or $rel-path eq "/") then
         <redirect url="index.html"/>
     </dispatch>
 else      
- if (ends-with($exist:resource, ".html")) then
- 
+(: else
+if (false()) then
+ <d>{$protected}</d>
+:)
+if (ends-with($exist:resource, ".html")) then
  (: this is a sequence of two steps, delivering result XOR (either one or the other)
     the first one only delivers result if login is necessary
     the second one, only if login is not necessary (i.e. project not protected or user already logged-in)
     :)
+        
     (if ($protected) then 
        (login:set-user("org.exist.demo.login", (), false()),    
             if (not(request:get-attribute("org.exist.demo.login.user")=$allowed-users)) then
@@ -74,11 +88,13 @@ else
     else (), (: not protected, so also go to second part :)
 
    if (not($protected) or request:get-attribute("org.exist.demo.login.user")=$allowed-users) then
-    let $user := request:get-attribute("org.exist.demo.login.user")
+    let $user := request:get-attribute("org.exist.demo.login.user")   
    let $path := config:resolve-template-to-uri($project-config-map, $rel-path)
     (:      <forward url="{$exist:controller}/{$config:templates-dir}{$template-id}/{$exist:resource}"/>
          :)
-    return  <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
+    return 
+    
+    <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
          <forward url="{$path}" />
           
           <view>
@@ -168,6 +184,16 @@ else if (false()) then
         
     else () (: login :)
     )
+
+else if (contains($exist:path, "cx")) then
+
+(: TODO: provide module-uri dynamically! :)
+<dispatch xmlns="http://exist.sourceforge.net/NS/exist">
+            <forward url="{$exist:controller}/core/rest-invoke.xql" >
+                <add-parameter name="exist-path" value="{$exist:path}"/>                
+                <add-parameter name="module-uri" value="../modules/smc/smc-cx.xqm"/>
+             </forward>
+</dispatch>
 
 else if (contains($exist:path, "fcs")) then
 
