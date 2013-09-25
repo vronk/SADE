@@ -85,15 +85,22 @@ declare function smc:gen-mappings($config, $x-context as xs:string+, $run-flag a
           $mappings := if ($context-mapping/xs:string(@key) = $x-context) then $context-mapping 
                     else doc(repo-utils:config-value($config, 'mappings')) 
     
-    for $map in $mappings/descendant-or-self::map[@key]
+   
+   let $mapsummaries := for $map in $mappings/descendant-or-self::map[@key]
                 let $map := smc:get-mappings($config, $map/xs:string(@key), true(), 'raw')
-                return <map count_indexes="{count($map/index)}" >{$map/@*}</map>
-           
+                return <map count_profiles="{count($map/map)}" count_indexes="{count($map//index)}" >{($map/@*,
+                            for $profile-map in $map/map 
+                            return <map count_indexes="{count($profile-map/index)}" count_paths="{count($profile-map/index/path)}">{$profile-map/@*}</map>)}</map>
+(:                return $map:)
+   
+   return <map empty_maps="{count($mapsummaries[xs:integer(@count_indexes)=0])}">{$mapsummaries}</map>
 
 };
 
 (:~ create and store mapping for every profile in given nodeset 
 expects the CMD-format
+
+calls crday:get-ay-xml which may be very time-consuming
 
 @param $format [raw, htmlpage, html] - raw: return only the produced table, html* : serialize as html
 @param $run-flag if true - re-run even if in cache
@@ -112,7 +119,7 @@ let $result := for $profile in $scan-profiles//sru:term
                         if (repo-utils:is-in-cache($map-doc-name, $config) and not($run-flag)) then 
                             repo-utils:get-from-cache($map-doc-name, $config)
                         else
-                            let $ay-data := crday:get-ay-xml($config, $x-context, $profile-name, $crday:defaultMaxDepth, false(), 'raw')    
+                            let $ay-data := crday:get-ay-xml($config, $x-context, $profile-name, $crday:defaultMaxDepth, $run-flag, 'raw')    
                             let $mappings := <map profile-id="{$profile/sru:value}" profile-name="{$profile-name}" context="{$x-context}"> 
                                                 {smc:match-paths($ay-data, $profile)}
                                                </map>
@@ -179,7 +186,7 @@ let $graph := transform:transform($termsets, $smc:xsl-terms2graph,<parameters><p
     $graph-doc := repo-utils:store-in-cache (concat($graph-file,".xml"), $graph,$config),    
     $graph-json := transform:transform($graph, $smc:xsl-graph2json,<parameters><param name="base-uri" value="/db/apps/cr-xq/modules/smc/data/" /></parameters> ),
     $graph-json-doc := repo-utils:store-in-cache(concat($graph-file,".json"), $graph-json, $config)  
-    let $graph-copy := if ($smc-browser-path ne '') then  repo-utils:store($smc-browser-path,concat($graph-file,".json"), $graph-json, true()) else ()
+    let $graph-copy := if ($smc-browser-path ne '') then  repo-utils:store($smc-browser-path,concat($graph-file,".json"), $graph-json, true(),$config) else ()
 return <gen-graph>{string-join((document-uri($termsets-doc), document-uri($graph-doc), concat($graph-file,".json"), $smc-browser-path),', ')}</gen-graph> 
 
 (:
