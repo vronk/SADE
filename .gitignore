@@ -8,3 +8,5 @@ src/core/config.xql
 src/repo.xml
 src/expath-pkg.xml
 build
+
+.DS_STORE
