@@ -421,11 +421,11 @@
     </xsl:template>
     <xsl:template name="message">
         <xsl:param name="msg"/>
-        <!--<xsl:if test="$debug">-->
+        <xsl:if test="$debug">
         <xsl:message>
             <xsl:copy-of select="$msg"/>
         </xsl:message>
-        <!--</xsl:if>-->
+        </xsl:if>
 <!--        <xsl:apply-templates/>-->
     </xsl:template>
 </xsl:stylesheet>
