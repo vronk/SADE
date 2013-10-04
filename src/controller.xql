@@ -9,6 +9,12 @@ declare variable $exist:controller external;
 declare variable $exist:prefix external;
 declare variable $exist:root external;
 
+(:~
+ : <code>$webResources<code> references suffixes of file types whose actual location in the
+ : database should be looked up by config:resolve-template-to-uri(), mostly web resources 
+ : which reside in templates.
+~:)
+let $webResources := ('js', 'css', 'png', 'jpg', 'gif', 'pdf', 'woff', 'ttf', 'eot')
 
 (:let $params := text:groups($exist:path, '^([^/]+)*/([^/]+)$'):)
 let $params := tokenize($exist:path, '/')
@@ -102,7 +108,7 @@ else
 (: Requests for js, css are resolved via our special resolver 
 <forward url="{concat('/sade/templates/', $template-id, '/', $rel-path )}" />
 :)
-else if ($file-type = ('js', 'css', 'png', 'jpg', 'gif', 'pdf')) then
+else if ($file-type = $webResources) then
     (: if called from a module (with separate path-step (currently only /get) :)
     let $corr-rel-path := if (starts-with($rel-path, "/get")) then substring-after($rel-path, '/get') else $rel-path
     let $path := config:resolve-template-to-uri($project-config-map, $corr-rel-path)
