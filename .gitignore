@@ -11,4 +11,8 @@ cr_xq.xpr
 ##########################
 src/repo.xml
 src/expath-pkg.xml
+build
+
+.DS_STORE
+=======
 build/*

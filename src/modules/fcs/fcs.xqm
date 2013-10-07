@@ -877,8 +877,14 @@ declare function fcs:apply-index($data, $index as xs:string, $x-context as xs:st
 (:    $match-on := if (exists($index-map/@use) ) then concat('/', xs:string($index-map[1]/@use)) else ''
 , $match-on:)  
     return
-        if (exists($index-map/path/text())) then util:eval("util:expand($data)//"||$index-xpath)
-        else ()  
+        if (exists($index-map/path/text())) 
+        then 
+            let $plain-eval:=util:eval("$data//"||$index-xpath)
+            return 
+                if (exists($plain-eval))
+                then $plain-eval
+                else util:eval("util:expand($data)//"||$index-xpath)
+        else () 
 };
 
 (:~ gets the mapping for the index and creates an xpath (UNION)
