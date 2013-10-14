@@ -515,7 +515,6 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
           <sru:numberOfRecords>{$result-count}</sru:numberOfRecords>
           <sru:echoedSearchRetrieveRequest>
               <sru:version>1.2</sru:version>
-              <sru:query>{$query}</sru:query>
               <fcs:x-context>{$x-context}</fcs:x-context>
               <fcs:x-dataview>{$x-dataview}</fcs:x-dataview>
               <sru:startRecord>{$startRecord}</sru:startRecord>
