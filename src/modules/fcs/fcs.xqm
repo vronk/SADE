@@ -117,7 +117,7 @@ declare function fcs:repo($config) as item()* {
       	 let $cql-query := $query,
 			$start-item := request:get-parameter("startRecord", 1),
 			$max-items := request:get-parameter("maximumRecords", 50),
-			$x-dataview := request:get-parameter("x-dataview", repo-utils:config-value($config, 'default.dataview'))
+			$x-dataview := string-join(request:get-parameter("x-dataview", repo-utils:config-value($config, 'default.dataview')),',')
             (: return cr:search-retrieve($cql-query, $query-collections, $format, xs:integer($start-item), xs:integer($max-items)) :)
             return 
             if (not($recordPacking = ('string','xml'))) then 
@@ -515,11 +515,11 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
           <sru:numberOfRecords>{$result-count}</sru:numberOfRecords>
           <sru:echoedSearchRetrieveRequest>
               <sru:version>1.2</sru:version>
+              <sru:query>{$query}</sru:query>
               <fcs:x-context>{$x-context}</fcs:x-context>
               <fcs:x-dataview>{$x-dataview}</fcs:x-dataview>
               <sru:startRecord>{$startRecord}</sru:startRecord>
-              <sru:maximumRecords>{$maximumRecords}</sru:maximumRecords>
-              <sru:query>{$query}</sru:query>          
+              <sru:maximumRecords>{$maximumRecords}</sru:maximumRecords>       
               <sru:baseUrl>{repo-utils:config-value($config, "base.url")}</sru:baseUrl> 
           </sru:echoedSearchRetrieveRequest>
           <sru:extraResponseData>
@@ -552,6 +552,7 @@ all based on mappings and parameters (data-view)
 declare function fcs:format-record-data($orig-sequence-record-data as node(), $record-data-input as node(), $query-matches as element(exist:match)*, $data-view as xs:string*, $x-context as xs:string*, $config) as item()*  {
 (:    let $record-data := util:expand($record, ""):)
                         (:	      cmdcoll:get-md-collection-name($raw-record-data):)
+    let $dataviews := tokenize($data-view,',\s*')
 	let $title := fcs:apply-index ($orig-sequence-record-data, "title",$x-context, $config)	   
 	let $resource-pid := fcs:apply-index ($orig-sequence-record-data, "resource-pid",$x-context, $config)	
 	let $resourcefragment-pid :=   fcs:apply-index($orig-sequence-record-data, "resourcefragment-pid",$x-context, $config)
@@ -626,9 +627,13 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                              else if (not($prev-next-scan//sru:terms/sru:term[2]/sru:value = $title)) then
                                                  $prev-next-scan//sru:terms/sru:term[2]/sru:value
                                             else "" 
-                                
-                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
-                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""
+                          
+                          let $nav-data-view := if (contains($data-view, 'navigation')) then $data-view else concat($data-view, '&amp;x-dataview=navigation')
+                          (:let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
+                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else "":)
+                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=', $data-view,'&amp;x-context=', $x-context) else ""                                                 
+                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=', $data-view, '&amp;x-context=', $x-context) else ""
+                          
                            return
                              (<fcs:ResourceFragment type="prev" pid="{$rf-prev}" ref="{$rf-prev-ref}"  />,
                              <fcs:ResourceFragment type="next" pid="{$rf-next}" ref="{$rf-next-ref}"  />)
@@ -643,9 +648,9 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
     let $dv-title := <fcs:DataView type="title">{$title[1]}</fcs:DataView>
     
     let $dv-xmlescaped :=   if (contains($data-view,'xmlescaped')) 
-                            then <fcs:DataView type="xmlescaped">{util:serialize($record-data,'method=xml, indent=yes')}</fcs:DataView>
+                            then util:serialize($record-data,'method=xml, indent=yes')
                             else ()
-    
+        
     (:return if ($data-view = 'raw') then $record-data 
             else <fcs:Resource pid="{$resource-pid}">
                        <fcs:ResourceFragment pid="{$resourcefragment-pid}" ref="{$resourcefragment-ref}">{
@@ -660,18 +665,19 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
         then $record-data
         else <fcs:Resource pid="{$resource-pid}">
                 <fcs:ResourceFragment pid="{$resourcefragment-pid}" ref="{$resourcefragment-ref}">{
-                    for $d in tokenize($data-view,',\s*') 
+                    for $d in $dataviews   
                     return 
                         let $data:= switch ($d)
                                         case "full"         return util:expand($record-data)
                                         case "facs"         return $dv-facs
                                         case "title"        return $dv-title
                                         case "kwic"         return $kwic
-                                        case "navigation"   return $dv-navigation
+                                        case "navigation"   return ()
                                         case "xmlescaped"   return $dv-xmlescaped
                                         default             return $kwic
-                         return <fcs:DataView type="{$d}">{$data}</fcs:DataView>
+                         return if (exists($data)) then <fcs:DataView type="{$d}">{$data}</fcs:DataView> else ()
                 }</fcs:ResourceFragment>
+                { if ('navigation' = $dataviews) then $dv-navigation else () }
             </fcs:Resource>
 
 };
@@ -950,7 +956,12 @@ it still strips the inner elements (descendants) and only leaves the .//text() .
 
 :)
 declare function fcs:process-result($result as node()*, $matching as node()*) as item()* {
-  for $node in $result
+       (: if the match is on the top-level base-elem itself, don't highlight.
+         it makes no sense to highlight the whole entry (page or so) :)
+    if ($result = $matching) then
+        $result
+     else 
+for $node in $result
     return  typeswitch ($node)
         case text() return $node
         case comment() return $node
