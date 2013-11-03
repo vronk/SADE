@@ -409,7 +409,7 @@ declare function fcs:do-scan-default($scan-clause as xs:string, $index-xpath as 
             $prenodes := typeswitch ($getnodes[1])
                             case xs:string 
                             case text()  return 
-                                for $t in $getnodes return <v>{$t}</v>
+                                    for $t in $getnodes return <v>{$t}</v>
                             case attribute() return 
                                 for $t in $getnodes return <v>{data($t)}</v>
                             default return 
@@ -522,7 +522,7 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
               <fcs:x-context>{$x-context}</fcs:x-context>
               <fcs:x-dataview>{$x-dataview}</fcs:x-dataview>
               <sru:startRecord>{$startRecord}</sru:startRecord>
-              <sru:maximumRecords>{$maximumRecords}</sru:maximumRecords>
+              <sru:maximumRecords>{$maximumRecords}</sru:maximumRecords>       
               <sru:query>{$query}</sru:query>          
               <sru:baseUrl>{repo-utils:config-value($config, "base.url")}</sru:baseUrl> 
           </sru:echoedSearchRetrieveRequest>
@@ -631,11 +631,12 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                              else if (not($prev-next-scan//sru:terms/sru:term[2]/sru:value = $title)) then
                                                  $prev-next-scan//sru:terms/sru:term[2]/sru:value
                                             else "" 
-                                
+                          
+                          let $nav-data-view := if (contains($data-view, 'navigation')) then $data-view else concat($data-view, '&amp;x-dataview=navigation')
                           (:let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
                           let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else "":)
-                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
-                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""
+                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=', $data-view,'&amp;x-context=', $x-context) else ""                                                 
+                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=', $data-view, '&amp;x-context=', $x-context) else ""
                           
                            return
                              (<fcs:ResourceFragment type="prev" pid="{$rf-prev}" ref="{$rf-prev-ref}"  />,
@@ -678,7 +679,7 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                         case "navigation"   return ()
                                         case "xmlescaped"   return $dv-xmlescaped
                                         default             return $kwic
-                         return <fcs:DataView type="{$d}">{$data}</fcs:DataView>
+                         return if (exists($data)) then <fcs:DataView type="{$d}">{$data}</fcs:DataView> else ()
                 }</fcs:ResourceFragment>
                 { if ('navigation' = $dataviews) then $dv-navigation else () }
             </fcs:Resource>
