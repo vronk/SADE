@@ -117,7 +117,7 @@ declare function fcs:repo($config) as item()* {
       	 let $cql-query := $query,
 			$start-item := request:get-parameter("startRecord", 1),
 			$max-items := request:get-parameter("maximumRecords", 50),
-			$x-dataview := request:get-parameter("x-dataview", repo-utils:config-value($config, 'default.dataview'))
+			$x-dataview := string-join(request:get-parameter("x-dataview", repo-utils:config-value($config, 'default.dataview')),',')
             (: return cr:search-retrieve($cql-query, $query-collections, $format, xs:integer($start-item), xs:integer($max-items)) :)
             return 
             if (not($recordPacking = ('string','xml'))) then 
@@ -361,7 +361,7 @@ declare function fcs:scan($scan-clause  as xs:string, $x-context as xs:string+, 
 
     (: extra handling if fcs.resource=root :)
     let $filterx := if ($index-name= 'fcs.resource' and $filter='root') then '' else $filter
-    
+    let $log:= util:log("INFO", $index-scan instance of node())
 	(: extract the required subsequence (according to given sort) :)
 	let $res-nodeset := transform:transform($index-scan,$fcs:indexXsl, 
 			<parameters><param name="scan-clause" value="{$scan-clause}"/>
@@ -406,14 +406,17 @@ declare function fcs:do-scan-default($scan-clause as xs:string, $index-xpath as 
         let $getnodes := util:eval(fn:concat("$data-collection//", $index-xpath)),
             (: if we collected strings, we have to wrap them in elements 
                     to be able to work with them in xsl :) 
-            $prenodes := if ($getnodes[1] instance of xs:string or $getnodes[1] instance of text()) then
-                                    for $t in $getnodes return <v>{$t}</v>
-                            else if ($getnodes[1] instance of attribute()) then
-                                    for $t in $getnodes return <v>{xs:string($t)}</v>
-                            else for $t in $getnodes return <v>{string-join($t//text()," ")}</v>
-        let $nodes := <nodes path="{fn:concat('//', $index-xpath)}"  >{$prenodes}</nodes>,
-        	(: use XSLT-2.0 for-each-group functionality to aggregate the values of a node - much, much faster, than XQuery :)
-   	    $data := transform:transform($nodes,$fcs:indexXsl, 
+            $prenodes := typeswitch ($getnodes[1])
+                            case xs:string 
+                            case text()  return 
+                                for $t in $getnodes return <v>{$t}</v>
+                            case attribute() return 
+                                for $t in $getnodes return <v>{data($t)}</v>
+                            default return 
+                                for $t in $getnodes return <v>{string-join($t//text()," ")}</v>
+        let $nodes := <nodes path="{fn:concat('//', $index-xpath)}"  >{$prenodes}</nodes>
+        	(: use XSLT-2.0 for-each-group functionality to aggregate the values of a node - much, much faster, than XQuey :)
+        let $data := transform:transform($nodes,$fcs:indexXsl, 
    	                <parameters><param name="scan-clause" value="{$scan-clause}"/>
    	                <param name="sort" value="{$sort}"/></parameters>)
    	    
@@ -553,6 +556,7 @@ all based on mappings and parameters (data-view)
 declare function fcs:format-record-data($orig-sequence-record-data as node(), $record-data-input as node(), $query-matches as element(exist:match)*, $data-view as xs:string*, $x-context as xs:string*, $config) as item()*  {
 (:    let $record-data := util:expand($record, ""):)
                         (:	      cmdcoll:get-md-collection-name($raw-record-data):)
+    let $dataviews := tokenize($data-view,',\s*')
 	let $title := fcs:apply-index ($orig-sequence-record-data, "title",$x-context, $config)	   
 	let $resource-pid := fcs:apply-index ($orig-sequence-record-data, "resource-pid",$x-context, $config)	
 	let $resourcefragment-pid :=   fcs:apply-index($orig-sequence-record-data, "resourcefragment-pid",$x-context, $config)
@@ -628,8 +632,11 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                                  $prev-next-scan//sru:terms/sru:term[2]/sru:value
                                             else "" 
                                 
-                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
-                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""
+                          (:let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
+                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else "":)
+                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
+                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""
+                          
                            return
                              (<fcs:ResourceFragment type="prev" pid="{$rf-prev}" ref="{$rf-prev-ref}"  />,
                              <fcs:ResourceFragment type="next" pid="{$rf-next}" ref="{$rf-next-ref}"  />)
@@ -646,7 +653,7 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
     let $dv-xmlescaped :=   if (contains($data-view,'xmlescaped')) 
                             then <fcs:DataView type="xmlescaped">{util:serialize($record-data,'method=xml, indent=yes')}</fcs:DataView>
                             else ()
-    
+        
     (:return if ($data-view = 'raw') then $record-data 
             else <fcs:Resource pid="{$resource-pid}">
                        <fcs:ResourceFragment pid="{$resourcefragment-pid}" ref="{$resourcefragment-ref}">{
@@ -661,18 +668,19 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
         then $record-data
         else <fcs:Resource pid="{$resource-pid}">
                 <fcs:ResourceFragment pid="{$resourcefragment-pid}" ref="{$resourcefragment-ref}">{
-                    for $d in tokenize($data-view,',\s*') 
+                    for $d in $dataviews   
                     return 
                         let $data:= switch ($d)
                                         case "full"         return util:expand($record-data)
                                         case "facs"         return $dv-facs
                                         case "title"        return $dv-title
                                         case "kwic"         return $kwic
-                                        case "navigation"   return $dv-navigation
+                                        case "navigation"   return ()
                                         case "xmlescaped"   return $dv-xmlescaped
                                         default             return $kwic
                          return <fcs:DataView type="{$d}">{$data}</fcs:DataView>
                 }</fcs:ResourceFragment>
+                { if ('navigation' = $dataviews) then $dv-navigation else () }
             </fcs:Resource>
 
 };
@@ -951,7 +959,12 @@ it still strips the inner elements (descendants) and only leaves the .//text() .
 
 :)
 declare function fcs:process-result($result as node()*, $matching as node()*) as item()* {
-  for $node in $result
+       (: if the match is on the top-level base-elem itself, don't highlight.
+         it makes no sense to highlight the whole entry (page or so) :)
+    if ($result eq $matching) then
+        $result
+     else 
+for $node in $result
     return  typeswitch ($node)
         case text() return $node
         case comment() return $node
