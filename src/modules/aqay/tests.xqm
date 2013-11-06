@@ -246,9 +246,14 @@ let $a-processed := (if (contains($result-link,'original')) then <a href="{$requ
                                                return <a href="{$req-rwr}">{$a-text}</a>
                                                else (),
                         if (contains($result-link,'cache')) then
-                                        (:let $cache-uri := if (exists($store)):) 
-                                            <a href="{concat('results/', $target-key, "/", $request-id, ".xml")}" > cache </a> 
-                                          else ()
+                                        (:let $cache-uri := if (exists($store)):)
+                              let $store-path := repo-utils:config-value($config, "store.path")
+                              let $store-url :=  substring-after($store-path, concat(repo-utils:config-value($config, 'project-id'), '/') )
+                                (: if only cache, write meaningful string  :)
+                              let $link-text := if ($result-link='cache') then $a-text else 'cache'
+(:                                            <a href="{concat('results/', $target-key, "/", $request-id, ".xml")}" > cache </a> :)
+                              return <a href="{concat($store-url, $target-key, "/", $request-id, ".xml")}" > { $link-text } </a> 
+                           else ()
                        ) 
                             
     let $result-data-raw := httpclient:get(xs:anyURI($request), false(), $headers )
