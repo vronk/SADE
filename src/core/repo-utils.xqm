@@ -204,7 +204,11 @@ let $rem :=if (util:is-binary-doc(concat($collection, $doc-name)) and $overwrite
                         else ()
   
   
-  let $store := (: util:catch("org.exist.xquery.XPathException", :) xdb:store($collection, $doc-name, $data),  
+  let $store := try { xdb:store($collection, $doc-name, $data)
+                    } catch * {
+                      let $diag := diag:diagnostics("general-system-error",($err:code , $err:description, $err:value))
+                      return xdb:store($collection, $doc-name, $diag)
+                    },  
   $stored-doc := if (util:is-binary-doc(concat($collection, "/", $doc-name))) then  util:binary-doc(concat($collection, "/", $doc-name)) else fn:doc(concat($collection, "/", $doc-name))
   return $stored-doc
   
