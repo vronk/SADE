@@ -10,6 +10,7 @@ declare namespace sru = "http://www.loc.gov/zing/srw/";
 declare variable $smc:termsets := doc("data/termsets.xml");
 declare variable $smc:dcr-terms := doc("data/dcr-terms.xml");
 declare variable $smc:cmd-terms := doc("data/cmd-terms.xml");
+declare variable $smc:cmd-terms-nested := doc("data/cmd-terms-nested.xml");
 declare variable $smc:dcr-cmd-map := doc("data/dcr-cmd-map.xml");
 declare variable $smc:xsl-smc-op := doc("xsl/smc_op.xsl");
 declare variable $smc:xsl-terms2graph := doc("xsl/terms2graph.xsl");
