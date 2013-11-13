@@ -396,6 +396,13 @@ declare function config:module-config() as item()* {
           then doc(concat($config:modules-dir, $coll, "/config.xml"))else ()
 };
 
+declare function config:module-config($module as xs:string) as item()* {
+(:    for $coll in xmldb:get-child-collections($config:modules-dir):)
+      if (doc-available(concat($config:modules-dir, $module, "/config.xml"))) 
+          then doc(concat($config:modules-dir, $module, "/config.xml"))else ()
+};
+
+
 (:~ checks if there is a config-file for given project
   : @param $project project identifier
  :)
