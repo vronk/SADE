@@ -361,7 +361,7 @@ declare function fcs:scan($scan-clause  as xs:string, $x-context as xs:string+, 
 
     (: extra handling if fcs.resource=root :)
     let $filterx := if ($index-name= 'fcs.resource' and $filter='root') then '' else $filter
-    let $log:= util:log("INFO", $index-scan instance of node())
+    
 	(: extract the required subsequence (according to given sort) :)
 	let $res-nodeset := transform:transform($index-scan,$fcs:indexXsl, 
 			<parameters><param name="scan-clause" value="{$scan-clause}"/>
@@ -405,18 +405,20 @@ declare function fcs:do-scan-default($scan-clause as xs:string, $index-xpath as 
     let $data-collection := repo-utils:context-to-collection($x-context, $config)
         let $getnodes := util:eval(fn:concat("$data-collection//", $index-xpath)),
             (: if we collected strings, we have to wrap them in elements 
-                    to be able to work with them in xsl :) 
-            $prenodes := typeswitch ($getnodes[1])
-                            case xs:string 
-                            case text()  return 
+                    to be able to work with them in xsl :)
+                    $prenodes := typeswitch ($getnodes[1])
+                            case xs:string  return
+                                    for $t in $getnodes return <v>{$t}</v>
+                            case text() return
                                     for $t in $getnodes return <v>{$t}</v>
                             case attribute() return 
                                 for $t in $getnodes return <v>{data($t)}</v>
                             default return 
                                 for $t in $getnodes return <v>{string-join($t//text()," ")}</v>
-        let $nodes := <nodes path="{fn:concat('//', $index-xpath)}"  >{$prenodes}</nodes>
-        	(: use XSLT-2.0 for-each-group functionality to aggregate the values of a node - much, much faster, than XQuey :)
-        let $data := transform:transform($nodes,$fcs:indexXsl, 
+          
+        let $nodes := <nodes path="{fn:concat('//', $index-xpath)}"  >{$prenodes}</nodes>,
+        	(: use XSLT-2.0 for-each-group functionality to aggregate the values of a node - much, much faster, than XQuery :)
+   	    $data := transform:transform($nodes,$fcs:indexXsl, 
    	                <parameters><param name="scan-clause" value="{$scan-clause}"/>
    	                <param name="sort" value="{$sort}"/></parameters>)
    	    
@@ -445,6 +447,7 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
         $seq-count := fn:count($result-seq),        
         $end-time := util:system-dateTime(),
     
+    
         $xpath-query-no-base-elem := fcs:transform-query ($query, $x-context, $config, false()),
 
 (:      started trying to invert the base-elem handling
@@ -454,7 +457,7 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
 
 (: do the extra highlighting (only if data-view kwic :)
         $match-seq := util:eval (concat("$result-seq", $xpath-query-no-base-elem)),
-        $result-seq-match:=         fcs:highlight-result($result-seq, $match-seq, $x-context, $config),
+        $result-seq-match :=fcs:highlight-result($result-seq, $match-seq, $x-context, $config),
             (:if (contains($x-dataview,'kwic')) then
                let $match-seq := util:eval (concat("$result-seq", $xpath-query-no-base-elem))
                return fcs:highlight-result($result-seq, $match-seq, $x-context, $config)
@@ -463,23 +466,22 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
         $result-seq-match := $result-seq,:)
         
 (: do xml-based highlighting in full-dataview  :)
-         $add-match-tags-on-attributes:= if (contains($x-dataview,'full')) then
+         $add-match-tags-on-attributes:= 
+                        if (contains($x-dataview,'full')) then
                                         let $results-no-base-elem:=         util:eval("$data-collection"||$xpath-query-no-base-elem)
                                         for $hit in $results-no-base-elem
-                                             return
-                                                 if ($hit instance of attribute())
-                                                 then fcs:add-exist-match(($hit/ancestor-or-self::*[@xml:id])[1],$hit)
-                                                 else ()
+                                            return if ($hit instance of attribute()) then 
+                                                     fcs:add-exist-match(($hit/ancestor-or-self::*[@xml:id])[1],$hit)
+                                                   else ()
                                    else (),
              (: daniel 2013-06-19 query matches are now passed on to fcs:format-record-data :)                                            
              (:$query-matches:=($add-match-tags-on-attributes,$xpath-query-no-base-elem),:)
              $query-matches:=$add-match-tags-on-attributes,
-             $query-matches-expanded:=util:expand($query-matches)//exist:match,
+             $query-matches-expanded :=util:expand($query-matches)//exist:match,
              $records :=
                <sru:records>
          	       {for $rec at $pos in $result-seq-match
-                            (: match
-         	           with the original sequence based on the position - na wenn das funktioniert :)
+                            (: match with the original sequence based on the position - na wenn das funktioniert :)
          	              let $orig-data := $result-seq[$pos] 
          	           let $rec-data := fcs:format-record-data($orig-data, $rec, $query-matches-expanded, $x-dataview, $x-context, $config)
 (:         	           let $rec-data := fcs:format-record-data($rec, $x-dataview, $x-context, $config):)
@@ -494,6 +496,7 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
                                  </sru:recordData>
          	                   <sru:recordPosition>{$pos}</sru:recordPosition>
          	                   <sru:recordIdentifier>{xs:string($rec-data/fcs:ResourceFragment[1]/@ref) }</sru:recordIdentifier>
+        
          	                </sru:record>
          	       }
                </sru:records>,
@@ -522,7 +525,7 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
               <fcs:x-context>{$x-context}</fcs:x-context>
               <fcs:x-dataview>{$x-dataview}</fcs:x-dataview>
               <sru:startRecord>{$startRecord}</sru:startRecord>
-              <sru:maximumRecords>{$maximumRecords}</sru:maximumRecords>       
+              <sru:maximumRecords>{$maximumRecords}</sru:maximumRecords>
               <sru:query>{$query}</sru:query>          
               <sru:baseUrl>{repo-utils:config-value($config, "base.url")}</sru:baseUrl> 
           </sru:echoedSearchRetrieveRequest>
@@ -531,6 +534,7 @@ declare function fcs:search-retrieve($query as xs:string, $x-context as xs:strin
             <fcs:numberOfMatches>{ () (: count($match) :)}</fcs:numberOfMatches>
     		<fcs:duration>{($end-time - $start-time, $end-time2 - $end-time) }</fcs:duration>
     		<fcs:transformedQuery>{ $xpath-query }</fcs:transformedQuery>
+    		
           </sru:extraResponseData>
           { ($records,
             if ($xpath-query instance of element(diagnostics)) then  <sru:diagnostics>{$xpath-query/*}</sru:diagnostics> else ()
@@ -556,11 +560,9 @@ all based on mappings and parameters (data-view)
 declare function fcs:format-record-data($orig-sequence-record-data as node(), $record-data-input as node(), $query-matches as element(exist:match)*, $data-view as xs:string*, $x-context as xs:string*, $config) as item()*  {
 (:    let $record-data := util:expand($record, ""):)
                         (:	      cmdcoll:get-md-collection-name($raw-record-data):)
-    let $dataviews := tokenize($data-view,',\s*')
 	let $title := fcs:apply-index ($orig-sequence-record-data, "title",$x-context, $config)	   
 	let $resource-pid := fcs:apply-index ($orig-sequence-record-data, "resource-pid",$x-context, $config)	
 	let $resourcefragment-pid :=   fcs:apply-index($orig-sequence-record-data, "resourcefragment-pid",$x-context, $config)
-	                                
     
      let $matches-to-highlight:=    for $m in (tokenize(request:get-parameter('x-highlight',''),','),$query-matches)
                                     return  typeswitch ($m)
@@ -631,12 +633,12 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                              else if (not($prev-next-scan//sru:terms/sru:term[2]/sru:value = $title)) then
                                                  $prev-next-scan//sru:terms/sru:term[2]/sru:value
                                             else "" 
-                          
+                                
                           let $nav-data-view := if (contains($data-view, 'navigation')) then $data-view else concat($data-view, '&amp;x-dataview=navigation')
                           (:let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
                           let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else "":)
-                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=', $data-view,'&amp;x-context=', $x-context) else ""                                                 
-                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=', $data-view, '&amp;x-context=', $x-context) else ""
+                          let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=', $data-view,'&amp;x-context=', $x-context) else ""
+                           let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=', $data-view, '&amp;x-context=', $x-context) else ""
                           
                            return
                              (<fcs:ResourceFragment type="prev" pid="{$rf-prev}" ref="{$rf-prev-ref}"  />,
@@ -652,9 +654,9 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
     let $dv-title := <fcs:DataView type="title">{$title[1]}</fcs:DataView>
     
     let $dv-xmlescaped :=   if (contains($data-view,'xmlescaped')) 
-                            then <fcs:DataView type="xmlescaped">{util:serialize($record-data,'method=xml, indent=yes')}</fcs:DataView>
+                            then util:serialize($record-data,'method=xml, indent=yes')
                             else ()
-        
+    
     (:return if ($data-view = 'raw') then $record-data 
             else <fcs:Resource pid="{$resource-pid}">
                        <fcs:ResourceFragment pid="{$resourcefragment-pid}" ref="{$resourcefragment-ref}">{
@@ -669,7 +671,7 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
         then $record-data
         else <fcs:Resource pid="{$resource-pid}">
                 <fcs:ResourceFragment pid="{$resourcefragment-pid}" ref="{$resourcefragment-ref}">{
-                    for $d in $dataviews   
+                    for $d in tokenize($data-view,',\s*') 
                     return 
                         let $data:= switch ($d)
                                         case "full"         return util:expand($record-data)
@@ -681,7 +683,7 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                         default             return $kwic
                          return if (exists($data)) then <fcs:DataView type="{$d}">{$data}</fcs:DataView> else ()
                 }</fcs:ResourceFragment>
-                { if ('navigation' = $dataviews) then $dv-navigation else () }
+                { if (contains($data-view,'navigation')) then $dv-navigation else () }
             </fcs:Resource>
 
 };
@@ -886,14 +888,12 @@ declare function fcs:apply-index($data, $index as xs:string, $x-context as xs:st
 (:    $match-on := if (exists($index-map/@use) ) then concat('/', xs:string($index-map[1]/@use)) else ''
 , $match-on:)  
     return
-        if (exists($index-map/path/text())) 
-        then 
-            let $plain-eval:=util:eval("$data//"||$index-xpath)
-            return 
+        if (exists($index-map/path/text())) then let $plain-eval:=util:eval("$data//"||$index-xpath)
+        return 
                 if (exists($plain-eval))
                 then $plain-eval
                 else util:eval("util:expand($data)//"||$index-xpath)
-        else () 
+        else ()  
 };
 
 (:~ gets the mapping for the index and creates an xpath (UNION)
@@ -938,7 +938,7 @@ declare function fcs:highlight-result($result as node()*, $match as node()*, $x-
     (: if the kwic-module already did its work, just give that back, 
             else use the custom highlighting:) 
      
-    (:problematic performance:)
+(:    problematic performance:)
     let $processed-result := if (exists($default-expand//exist:match)) then $default-expand
                                else fcs:process-result($result, $match)
 (:  do-nothing pass-through variant :)
@@ -962,7 +962,7 @@ it still strips the inner elements (descendants) and only leaves the .//text() .
 declare function fcs:process-result($result as node()*, $matching as node()*) as item()* {
        (: if the match is on the top-level base-elem itself, don't highlight.
          it makes no sense to highlight the whole entry (page or so) :)
-    if ($result eq $matching) then
+    if ($result = $matching) then
         $result
      else 
 for $node in $result
