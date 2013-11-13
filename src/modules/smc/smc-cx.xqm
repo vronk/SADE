@@ -6,13 +6,14 @@ xquery version "3.0";
 module namespace cx = "http://clarin.eu/smc/cx";
 import module namespace smc="http://clarin.eu/smc" at "smc.xqm";
 import module namespace diag =  "http://www.loc.gov/zing/srw/diagnostic/" at  "/db/apps/cr-xq/modules/diagnostics/diagnostics.xqm";
-
-(:import module namespace config="http://exist-db.org/xquery/apps/config" at "../../modules/config.xqm";:)
+import module namespace repo-utils = "http://aac.ac.at/content_repository/utils" at  "../../core/repo-utils.xqm";
+import module namespace config="http://exist-db.org/xquery/apps/config" at "../../core/config.xqm";
 
 declare namespace rest="http://exquery.org/ns/restxq";
 declare namespace output="http://www.w3.org/2010/xslt-xquery-serialization";
 
 declare variable $cx:map-formats := ('default','','schema','schemas','cmdid','id','datcat');
+
 
 (:declare option exist:serialize "method=xml media-type=application/xml enforce-xhtml=yes";:)
 
@@ -28,50 +29,16 @@ declare
     %rest:query-param("format", "{$format}", "xml")
 (:    %rest:produces("application/xml", "text/xml"):)
 function cx:list($context, $format) {
-      (: separate handling for isocat, because of lang :)
-
-(:<answer term="{$context}" relset="{$format}" >
-{ diag:diagnostics('unsupported-param-value',("context=", $context)) }
-</answer>
-:)
-   if ($context = ('*','top')) then
-        $smc:termsets
-   else if (starts-with($context, 'isocat')) then        
-        let $lang := if (starts-with($context, 'isocat-')) then substring-after($context, 'isocat-') else ''
-        let $terms := $smc:dcr-cmd-map//Term[@set='isocat' and (@xml:lang=$lang or ($lang='' and @type='mnemonic'))]
-       return <Termset set="{$context}" xml:lang="{$lang}" format="{$format}" count="{count($terms)}">
-            { for $term in $terms 
-                  return  <Term concept-id="{$term/ancestor::Concept/data(@id)}" >{($term/@*,$term/text())}</Term>
-             }            
-          </Termset>       
-    else
-   if ($context= 'cmd-profiles') then
-            <Termset key="{$context}">   
-    { $smc:termsets//Termset[key/text() = $context]/* }            
-            </Termset>
-    else
-   if (exists($smc:cmd-terms-nested//Termset[data(@id) eq $context])) then
-            <Termset key="{$context}">   
-    { $smc:cmd-terms-nested//Termset[data(@id) eq $context] }            
-            </Termset>
-  
-    else if (not(exists($smc:termsets//Termset[key=$context or @type=$context]))) then 
-(:           diag:diagnostics('unsupported-param-value',("context=", $context)):)            
-         <diagnostics>
-            <diagnostic xmlns="http://www.loc.gov/zing/srw/diagnostic/" key="unsupported-param-value">
-            <uri>info:srw/diagnostic/1/6</uri>
-            <details>context= {$context}</details>
-            <message>Unsupported parameter value</message>
-            </diagnostic>
-         </diagnostics>
+ 
+ let $data := smc:list($context)
+ 
+  let $result:= if (contains($format,'html')) then
+(:                let $option := util:declare-option("exist:serialize", "method=html media-type=application/html"):)
+        let $resp := <rest:response> <http:response status="200"> <http:header name="Content-Type" value="text/html; charset=utf-8"/> </http:response> </rest:response>
+                return ($resp, repo-utils:serialise-as($data, $format, 'terms', $smc:config))
+           else $data
             
-    else
-        let $terms := $smc:dcr-cmd-map//Term[@set=$context]
-        return <Termset set="{$context}" format="{$format}" count="{count($terms)}">             
-            { for $term in $terms
-                  return  <Term concept-id="{$term/ancestor::Concept/data(@id)}" >{($term/@*,$term/text())}</Term>
-            }
-        </Termset>
+  return $result
 
 };
 
@@ -173,17 +140,31 @@ function cx:map($context, $term, $relset) {
 };
 
 :)
-(:~
- : Search addresses using a given field and a (lucene) query string.
- :)
+
 declare 
     %rest:GET
-    %rest:path("/search/{$query}")
-    (:%rest:form-param("query", "{$query}", "")
-    %rest:form-param("field", "{$field}", "name"):)
-function cx:search($query as xs:string*) {
-    <TODO><q>{$query}</q></TODO>
+    %rest:path("/smc/cx/diff")        
+    %rest:query-param("context", "{$context}", "smc")
+    %rest:query-param("id1", "{$id1}", "")
+    %rest:query-param("id2", "{$id2}", "")
+    %rest:query-param("format", "{$format}", "xml")
+(:    %rest:produces("application/xml", "text/xml"):)
+function cx:diff($id1, $id2, $context, $format) {
+ 
+ let $data := smc:diff($id1, $id2, config:config('mdrepo'))
+ 
+  let $result:= if (contains($format,'html')) then
+(:                let $option := util:declare-option("exist:serialize", "method=html media-type=application/html"):)
+        let $resp := <rest:response> <http:response status="200"> <http:header name="Content-Type" value="text/html; charset=utf-8"/> </http:response> </rest:response>
+                return ($resp, repo-utils:serialise-as($data, $format, 'terms', $smc:config))
+           else $data
+            
+  return $result
+(: let $terms1 := smc:resolve($id1, config:config($context))
+return ($terms1, $data):)
+
 };
+
 
 
 (:~
