@@ -33,7 +33,10 @@ declare function repo-utils:base-url($config as item()*) as xs:string* {
     let $config-base-url := if (repo-utils:config-value($config, 'base.url') = '') then request:get-uri() else repo-utils:config-value($config, 'base.url')
     return concat($server-base, $config-base-url):)
 (:    let $url := request:get-url():)
-let $url := request:get-uri()
+let $url := try { request:get-url()
+            } catch * {
+            ''
+            }
     return $url
 };  
 
@@ -67,7 +70,7 @@ declare function repo-utils:config-values($config, $key as xs:string) as xs:stri
 (:~ Get value of a param based on a key, from config or from request-param (precedence) :)
 declare function repo-utils:param-value($config, $key as xs:string, $default as xs:string) as xs:string* {
     
-    let $param := request:get-parameter($key, $default)
+    let $param := try { request:get-parameter($key, $default) } catch * { () }
     return if ($param) then $param else $config//(param|property)[@key=$key]
 };
 
@@ -243,21 +246,21 @@ declare function repo-utils:serialise-as($item as node()?, $format as xs:string,
 :)
 declare function repo-utils:serialise-as($item as node()?, $format as xs:string, $operation as xs:string, $config, $parameters as node()* ) as item()? {        
         if ($format eq $repo-utils:responseFormatJSon) then
-	       
+
 	       let $xslDoc := repo-utils:xsl-doc($operation, $format, $config )
 	       let $res := if ($xslDoc) then
 	                           let $option := util:declare-option("exist:serialize", "method=text media-type=application/json")
 	                           return       transform:transform($item,$xslDoc, 
                                  			<parameters><param name="format" value="{$format}"/>
-                                 			            <param name="x-context" value="{repo-utils:param-value($config, 'x-context', '' )}"/>
-                                 			            <param name="base_url" value="{repo-utils:base-url($config)}"/>
+                                 			             <param name="x-context" value="{repo-utils:param-value($config, 'x-context','')}"/>
+                                 			             <param name="base_url" value="{repo-utils:base-url($config)}"/>
                                  			            <param name="mappings-file" value="{repo-utils:config-value($config, 'mappings')}"/>
                                  			            <param name="scripts_url" value="{repo-utils:config-value($config, 'scripts.url')}"/>
                                  			             <param name="site_name" value="{repo-utils:config-value($config, 'site.name')}"/>
                                  			             <param name="site_logo" value="{repo-utils:config-value($config, 'site.logo')}"/>
                                  			             {$parameters/param}
                                  			</parameters>)
-                            else 
+        else 
                                 let $option := util:declare-option("exist:serialize", "method=json media-type=application/json")    
                                 return $item
 	       return $res
@@ -266,7 +269,7 @@ declare function repo-utils:serialise-as($item as node()?, $format as xs:string,
 	           let $res := if (exists($xslDoc)) then transform:transform($item,$xslDoc, 
               			<parameters><param name="format" value="{$format}"/>
               			           <param name="operation" value="{$operation}"/>
-              			            <param name="x-context" value="{repo-utils:param-value($config, 'x-context', '' )}"/>
+                                    <param name="x-context" value="{repo-utils:param-value($config, 'x-context','')}"/>
               			            <param name="base_url" value="{repo-utils:base-url($config)}"/>
               			            <param name="mappings-file" value="{repo-utils:config-value($config, 'mappings')}"/>
               			            <param name="scripts_url" value="{repo-utils:config-value($config, 'scripts.url')}"/>
