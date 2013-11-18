@@ -1,4 +1,4 @@
-xquery version "1.0";
+xquery version "3.0";
 module namespace fcs-tests  = "http://clarin.eu/fcs/1.0/tests";
 
 import module namespace httpclient = "http://exist-db.org/xquery/httpclient";
@@ -198,7 +198,8 @@ declare function fcs-tests:process-test($test as node(), $target-key, $config) a
                 return fcs-tests:process-request ($test, $request, $a/text(), $target-key, $test-id, $action, $config)
             else 
             (: if we have a list, iterate over the items of the list and run a request for each :)
-                for $i at $c in $list-doc/lst/*
+            
+                for $i at $c in $list-doc/*/*
                   let $request := concat($target-uri,  fcs-tests:subst(xs:string($a/@href), $i)),
                       $i-id := if ($i/@id) then xs:string($i/@id) else $c,
                       $request-id := concat($test-id, $i-id),
@@ -210,6 +211,10 @@ declare function fcs-tests:process-test($test as node(), $target-key, $config) a
 
 Issues one http-call to the target-url in the a@href-attribute, stores the incoming result (only if $action='run-store') and evaluates the associated xpaths  
 
+allows for simple authentication mechanism, via http-header.
+also tried to send as params which the the new exist auth seemed to accept, 
+but it did not work out, still got redirect to login
+
 @param $test div[@class='test']-element
 @param $request resolved (substituted) link
 @param $a-text resolved (substituted) text for the link
@@ -220,24 +225,36 @@ Issues one http-call to the target-url in the a@href-attribute, stores the incom
 :) 
 declare function fcs-tests:process-request($test, $request as xs:string, $a-text as xs:string, $target-key as xs:string, $request-id as xs:string, $action as xs:string, $config) as item()* { 
             
-    let $result-link := $config//property[xs:string(@key)='result-link']            
-    let $a-processed := (if (contains($result-link,'original')) then <a href="{$request}">{$a-text}</a> else (),
+(:    let $result-link := $config//property[xs:string(@key)='result-link']            :)
+      let $result-link := repo-utils:config-value($config,'result-link')
+
+    let $username := if ($test/@username) then $test/xs:string(@username)  else ""  
+    let $password := if ($test/@password) then $test/xs:string(@password) else "" 
+    
+(:  not working   let $auth-param := if ($test/@auth-type) then concat('&amp;user=', $username, '&amp;password=', $password) else "" :)
+
+    let $headers := if ($username='') then () else                            
+                        let $auth := concat("Basic ", util:base64-encode(concat($username, ':', $password)))
+                        return <headers><header name="Authorization" value="{$auth}"/></headers>
+
+
+let $a-processed := (if (contains($result-link,'original')) then <a href="{$request}">{$a-text}</a> else (),
                          if (contains($result-link,'rewrite')) then
-                                               let $cache-uri-prefix := $config//property[xs:string(@key)='result-uri-prefix']
+(:                                               let $cache-uri-prefix := $config//property[xs:string(@key)='result-uri-prefix']:)
+                                               let $cache-uri-prefix :=  repo-utils:config-value($config,'result-uri-prefix')
                                                let $req-rwr := concat($cache-uri-prefix, $request-id, ".xml")                                               
                                                return <a href="{$req-rwr}">{$a-text}</a>
                                                else (),
                         if (contains($result-link,'cache')) then
-                                        (:let $cache-uri := if (exists($store)):) 
-                                            <a href="{concat('results/', $target-key, "/", $request-id, ".xml")}" > cache </a> 
-                                          else ()
+                                        (:let $cache-uri := if (exists($store)):)
+                              let $store-path := repo-utils:config-value($config, "store.path")
+                              let $store-url :=  substring-after($store-path, concat(repo-utils:config-value($config, 'project-id'), '/') )
+                                (: if only cache, write meaningful string  :)
+                              let $link-text := if ($result-link='cache') then $a-text else 'cache'
+(:                                            <a href="{concat('results/', $target-key, "/", $request-id, ".xml")}" > cache </a> :)
+                              return <a href="{concat($store-url, $target-key, "/", $request-id, ".xml")}" > { $link-text } </a> 
+                           else ()
                        ) 
-    let $username := if ($test/@username) then $test/xs:string(@username)  else ""  
-    let $password := if ($test/@password) then $test/xs:string(@password) else "" 
-    
-    let $headers := if ($username='') then () else
-                            let $auth := concat("Basic ", util:base64-encode(concat($username, ':', $password)))
-                            return <headers><header name="Authorization" value="{$auth}"/></headers>
                             
     let $result-data-raw := httpclient:get(xs:anyURI($request), false(), $headers )
     
@@ -247,7 +264,17 @@ declare function fcs-tests:process-request($test, $request as xs:string, $a-text
                         util:base64-decode($result-data-raw//httpclient:body/text())
                      else 
                         $result-data-raw//httpclient:body/text()
-    let $json-xml := if ($json) then  xqjson:parse-json($json) else ()
+              
+                    let $json-xml := if ($json) then
+                            try {
+                                    xqjson:parse-json($json) 
+                           }
+                       catch *         
+                        {
+                        diag:diagnostics('general-error', string-join(($err:code , $err:description, $err:value), '; '))
+                        }
+                            else ()
+                    
 
     let $result-data := if ($result-data-raw//httpclient:headers/httpclient:header[xs:string(@name)="Content-Type"]
                                   /contains(xs:string(@value),"application/json")) then                                    
@@ -263,6 +290,8 @@ declare function fcs-tests:process-request($test, $request as xs:string, $a-text
                                           $result-data-raw/httpclient:body,
                                           <httpclient:body  mimetype="application/xml; charset=UTF-8">{$json-xml}</httpclient:body>
                                           )}</httpclient:response>
+                        else if (repo-utils:config-value($config, 'store.flag') eq 'data-only') then                         
+                            $result-data-raw//httpclient:body/*
                         else $result-data-raw                    
                             
 (:        let $store := if ($action eq 'run-store') then fcs-tests:store-result($target-key, $request-id, $result-data//httpclient:body/*) else ()
@@ -312,7 +341,7 @@ declare function fcs-tests:store-result($target as xs:string, $queryset as xs:st
   
   let $result-path := fcs-tests:get-result-paths($target, concat($queryset, $test), $config)
    
-  let $store-result := repo-utils:store($result-path[1], $result-path[2], $result, true())
+  let $store-result := repo-utils:store($result-path[1], $result-path[2], $result, true(),$config)
 
 return $store-result
 };

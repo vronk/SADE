@@ -23,24 +23,18 @@
         </div>
         <div class="container-fluid">
             <div class="row-fluid">
-                <div class="span2">
-                    <img src="sade/templates/default/images/ide_logo.png" style="padding-bottom:10px"/>
-                    <div id="left" class="well">
-                        <p>left</p>
-                    </div>
-                </div>
-                <div class="span7">
-                    <div id="content">
+                <div class="span12">
+                    <div id="content-container">
                         <p>main</p>
                     </div>
                 </div>
-                <div class="span3">
-                    <img src="templates/default/images/bbaw_logo.png" style="padding-bottom:10px; float:right;"/>
-                    <div class="well" style="clear:both;">
+                <div>
+                    
+                    <!--<div class="well" style="clear:both;">
                         <div id="right">
                             <p>right</p>
                         </div>
-                    </div>
+                    </div>-->
                 </div>
             </div>
         </div>

@@ -1,3 +1,4 @@
+xquery version "3.0";
 module namespace repo-utils = "http://aac.ac.at/content_repository/utils";
 
 import module namespace xdb="http://exist-db.org/xquery/xmldb";
@@ -31,7 +32,11 @@ declare function repo-utils:base-url($config as item()*) as xs:string* {
     (:let $server-base := if (repo-utils:config-value($config, 'server.base') = '') then ''  else repo-utils:config-value($config, 'server.base')
     let $config-base-url := if (repo-utils:config-value($config, 'base.url') = '') then request:get-uri() else repo-utils:config-value($config, 'base.url')
     return concat($server-base, $config-base-url):)
-    let $url := request:get-url()
+(:    let $url := request:get-url():)
+let $url := try { request:get-url()
+            } catch * {
+            ''
+            }
     return $url
 };  
 
@@ -65,7 +70,7 @@ declare function repo-utils:config-values($config, $key as xs:string) as xs:stri
 (:~ Get value of a param based on a key, from config or from request-param (precedence) :)
 declare function repo-utils:param-value($config, $key as xs:string, $default as xs:string) as xs:string* {
     
-    let $param := request:get-parameter($key, $default)
+    let $param := try { request:get-parameter($key, $default) } catch * { () }
     return if ($param) then $param else $config//(param|property)[@key=$key]
 };
 
@@ -138,18 +143,30 @@ declare function repo-utils:is-in-cache($doc-name as xs:string,$config) as xs:bo
 
 
 declare function repo-utils:get-from-cache($doc-name as xs:string,$config) as item()* {
-      fn:doc(fn:concat(repo-utils:config-value($config, 'cache.path'), "/", $doc-name))
+    let $path := fn:concat(repo-utils:config-value($config, 'cache.path'), "/", $doc-name)
+    
+    return 
+        try {
+           if (doc-available($path)) then
+            fn:doc($path)
+            else ()
+        } catch * {         
+           if (util:binary-doc-available($path)) then
+                util:binary-doc($path)
+           else ()
+        }
 };
 
 (:~ Store the data in cache. Uses own writer-account
 :)
 declare function repo-utils:store-in-cache($doc-name as xs:string, $data as node(),$config) as item()* {
   
-  let $clarin-writer := fn:doc(repo-utils:config-value($config, 'writer')),
+  let $clarin-writer := fn:doc(repo-utils:config-value($config, 'writer.file')),
   $cache-path := repo-utils:config-value($config, 'cache.path'),
   $dummy := xdb:login($cache-path, $clarin-writer//write-user/text(), $clarin-writer//write-user-cred/text()),
   $store := (: util:catch("org.exist.xquery.XPathException", :) xdb:store($cache-path, $doc-name, $data), (: , ()) :)
-  $stored-doc := fn:doc(concat($cache-path, "/", $doc-name))
+  $stored-doc := if ( util:is-binary-doc(concat($cache-path, "/", $doc-name))) then util:binary-doc(concat($cache-path, "/", $doc-name))
+                        else fn:doc(concat($cache-path, "/", $doc-name))
   return $stored-doc
 (:  ():)
 };
@@ -171,16 +188,33 @@ return $store-result
 };
 :)
 
+(:~ Store the data somewhere (in $collection)
+checks for logged in user and only tries to use the internal writer, if no user logged in.
+:)
 (:<options><option key="update">yes</option></options>:)
-declare function repo-utils:store($collection as xs:string, $doc-name as xs:string, $data as node(), $overwrite as xs:boolean) as item()* {
-  let $clarin-writer := fn:doc("writer.xml"),
-  $dummy := xdb:login($collection, $clarin-writer//write-user/text(), $clarin-writer//write-user-cred/text())
+declare function repo-utils:store($collection as xs:string, $doc-name as xs:string, $data as node(), $overwrite as xs:boolean, $config) as item()* {
+  let $writer := fn:doc(repo-utils:config-value($config, 'writer.file')),
+  $dummy := if (request:get-attribute("org.exist.demo.login.user")='') then
+                xdb:login($collection, $writer//write-user/text(), $writer//write-user-cred/text())
+             else ()  
 
-  let $rem := if ($overwrite and doc-available(concat($collection, $doc-name))) then xdb:remove($collection, $doc-name) else ()
+(:  let $rem := if ($overwrite and doc-available(concat($collection, $doc-name))) then xdb:remove($collection, $doc-name) else () :)
+
+let $rem :=if (util:is-binary-doc(concat($collection, $doc-name)) and $overwrite) then
+                        xdb:remove($collection, $doc-name)
+                      else if ($overwrite and doc-available(concat($collection, $doc-name))) 
+                        then xdb:remove($collection, $doc-name)  
+                        else ()
   
-  let $store := (: util:catch("org.exist.xquery.XPathException", :) xdb:store($collection, $doc-name, $data), (: , ()) :)
-  $stored-doc := fn:doc(concat($collection, "/", $doc-name))
+  
+  let $store := try { xdb:store($collection, $doc-name, $data)
+                    } catch * {
+                      let $diag := diag:diagnostics("general-system-error",($err:code , $err:description, $err:value))
+                      return xdb:store($collection, $doc-name, $diag)
+                    },  
+  $stored-doc := if (util:is-binary-doc(concat($collection, "/", $doc-name))) then  util:binary-doc(concat($collection, "/", $doc-name)) else fn:doc(concat($collection, "/", $doc-name))
   return $stored-doc
+  
 };
 
 
@@ -212,21 +246,21 @@ declare function repo-utils:serialise-as($item as node()?, $format as xs:string,
 :)
 declare function repo-utils:serialise-as($item as node()?, $format as xs:string, $operation as xs:string, $config, $parameters as node()* ) as item()? {        
         if ($format eq $repo-utils:responseFormatJSon) then
-	       
+
 	       let $xslDoc := repo-utils:xsl-doc($operation, $format, $config )
 	       let $res := if ($xslDoc) then
 	                           let $option := util:declare-option("exist:serialize", "method=text media-type=application/json")
 	                           return       transform:transform($item,$xslDoc, 
                                  			<parameters><param name="format" value="{$format}"/>
-                                 			            <param name="x-context" value="{repo-utils:param-value($config, 'x-context', '' )}"/>
-                                 			            <param name="base_url" value="{repo-utils:base-url($config)}"/>
+                                 			             <param name="x-context" value="{repo-utils:param-value($config, 'x-context','')}"/>
+                                 			             <param name="base_url" value="{repo-utils:base-url($config)}"/>
                                  			            <param name="mappings-file" value="{repo-utils:config-value($config, 'mappings')}"/>
                                  			            <param name="scripts_url" value="{repo-utils:config-value($config, 'scripts.url')}"/>
                                  			             <param name="site_name" value="{repo-utils:config-value($config, 'site.name')}"/>
                                  			             <param name="site_logo" value="{repo-utils:config-value($config, 'site.logo')}"/>
                                  			             {$parameters/param}
                                  			</parameters>)
-                            else 
+        else 
                                 let $option := util:declare-option("exist:serialize", "method=json media-type=application/json")    
                                 return $item
 	       return $res
@@ -235,7 +269,7 @@ declare function repo-utils:serialise-as($item as node()?, $format as xs:string,
 	           let $res := if (exists($xslDoc)) then transform:transform($item,$xslDoc, 
               			<parameters><param name="format" value="{$format}"/>
               			           <param name="operation" value="{$operation}"/>
-              			            <param name="x-context" value="{repo-utils:param-value($config, 'x-context', '' )}"/>
+                                    <param name="x-context" value="{repo-utils:param-value($config, 'x-context','')}"/>
               			            <param name="base_url" value="{repo-utils:base-url($config)}"/>
               			            <param name="mappings-file" value="{repo-utils:config-value($config, 'mappings')}"/>
               			            <param name="scripts_url" value="{repo-utils:config-value($config, 'scripts.url')}"/>

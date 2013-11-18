@@ -16,6 +16,7 @@ declare variable $templates:CONFIGURATION := QName("http://exist-db.org/xquery/t
 declare variable $templates:CONFIGURATION_ERROR := QName("http://exist-db.org/xquery/templates", "ConfigurationError");
 declare variable $templates:NOT_FOUND := QName("http://exist-db.org/xquery/templates", "NotFound");
 declare variable $templates:TOO_MANY_ARGS := QName("http://exist-db.org/xquery/templates", "TooManyArguments");
+declare variable $templates:TYPE_ERROR := QName("http://exist-db.org/xquery/templates", "TypeError");
 
 (:~ 
  : Start processing the provided content. Template functions are looked up by calling the
@@ -188,7 +189,7 @@ declare %private function templates:map-argument($arg as element(argument), $par
             templates:cast($param, $type)
         } catch * {
             error($templates:TYPE_ERROR, "Failed to cast parameter value '" || $param || "' to the required target type for " ||
-                "template function parameter $" || $name || " of function " || ($arg/../@name) || ". Required type was: " ||
+                "template function parameter $" || $var || " of function " || ($arg/../@name) || ". Required type was: " ||
                 $type || ". " || $err:description)
         }
     return
@@ -308,6 +309,21 @@ function templates:include($node as node(), $model as map(*), $path as xs:string
 declare %templates:default("filter", "") 
 function templates:include-detail($node as node(), $model as map(*), $path-detail as xs:string, $filter as xs:string) {
     let $content := config:resolve($model, $path-detail)
+    let $restricted-content := if ($filter != '' and exists($content)) then 
+            (: try to handle namespaces dynamically 
+                by switching  to source namespace :)
+            let $ns-uri := namespace-uri($content[1]/*)        	       
+            let $ns := util:declare-namespace("",xs:anyURI($ns-uri))
+           return util:eval(concat("$content//", $filter)) else $content 
+    return templates:process($restricted-content , $model)
+};
+
+(:~ and another function for include in menu. 
+This is not very generic :(  )
+:)
+declare %templates:default("filter", "") 
+function templates:include-menu($node as node(), $model as map(*), $path-menu as xs:string, $filter as xs:string) {
+    let $content := config:resolve($model, $path-menu)
     let $restricted-content := if ($filter != '' and exists($content)) then 
             (: try to handle namespaces dynamically 
                 by switching  to source namespace :)

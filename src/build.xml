@@ -9,7 +9,7 @@
     <property name="build.dir" value="build"/>
     <target name="xar" depends="configure-metafiles">
         
-        <echo>building: ${app.name}/${app.version}</echo>
+        <echo>building: ${app.name}#${app.version}</echo>
         <echo>into: ${build.dir}</echo>
         <mkdir dir="${build.dir}"/>
         <zip basedir="." destfile="${build.dir}/${app.name}-${app.version}.xar" excludes="${build.dir},${build.dir}/**,**/*.template.*,**/build.*"/>
@@ -33,12 +33,15 @@
             
         </replace>
         
-        <copy file="core/config.template.xql" tofile="core/config.xql" />
+        <copy file="core/config.template.xql" tofile="core/config.xql" overwrite="true"  />
         <replace file="core/config.xql"
             propertyFile="../build.properties">
             <replacefilter 
                 token="@projects.dir@" 
                 property="projects.dir"/>
+            <replacefilter 
+                token="@app.name@" 
+                property="app.name"/>
         </replace>
     </target>
 </project>
