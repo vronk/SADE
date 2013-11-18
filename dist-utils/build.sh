@@ -61,11 +61,12 @@ shift `expr $OPTIND - 1`
 JETTY_VERSION=8.0.4.v20111024
 
 # digilib (setting "tip" as changeset gets head revision)
-DIGILIB_CHANGESET=f2ac01ddebf1
+#DIGILIB_CHANGESET=f2ac01ddebf1
+DIGILIB_CHANGESET=e5281d63f03f
 DIGILIB_LOC=http://hg.berlios.de/repos/digilib/archive/$DIGILIB_CHANGESET.tar.bz2
 
 # tomcat
-TOMCAT_VERSION=7.0.37
+TOMCAT_VERSION=7.0.47
 
 # exist
 #EXIST_BRANCH=stable/eXist-2.0.x    # exist 2.0
@@ -266,7 +267,8 @@ fi
 
 echo "[SADE BUILD] building async version (servlet api3)"
 #mvn package -Dmaven.compiler.source=1.6 -Dmaven.compiler.target=1.6 -Ptext -Ppdf -Pservlet3 -Pcodec-bioformats -Pcodec-imagej -Pcodec-jai
-mvn package -Dmaven.compiler.source=1.6 -Dmaven.compiler.target=1.6 -Ptext -Ppdf -Pservlet3
+#mvn package -Dmaven.compiler.source=1.6 -Dmaven.compiler.target=1.6 -Ptext -Ppdf -Pservlet3
+mvn package
 
 cd $BUILDLOC/sade/webapps
 mkdir digitallibrary
@@ -277,7 +279,7 @@ unzip -q $BUILDLOC/digilib-$DIGILIB_CHANGESET/webapp/target/digilib*.war
 mkdir images
 mkdir scaled
 mkdir thumb
-sed -i 's/<parameter name="basedir-list" value="\/docuserver\/images:\/docuserver\/scaled\/small:\/docuserver\/scaled\/thumb" \/>/<parameter name="basedir-list" value="images:scaled:thumb" \/>/g' WEB-INF/digilib-config.xml
+#sed -i 's/<parameter name="basedir-list" value="\/docuserver\/images:\/docuserver\/scaled\/small:\/docuserver\/scaled\/thumb" \/>/<parameter name="basedir-list" value="images:scaled:thumb" \/>/g' WEB-INF/digilib-config.xml
 
 #####
 #
