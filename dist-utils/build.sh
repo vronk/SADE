@@ -71,10 +71,10 @@ TOMCAT_VERSION=7.0.47
 # exist
 #EXIST_BRANCH=stable/eXist-2.0.x    # exist 2.0
 #EXIST_SRC_LOC=exist-2.0
-EXIST_BRANCH=trunk/eXist           # eXist 2.1
-EXIST_SRC_LOC=exist-2.0
+EXIST_BRANCH=develop               # one of develop, master (stable), exist-2.0.x
+EXIST_SRC_LOC=exist-git
 #EXIST_REV=-1					   # revision to check out -1 means head
-EXIST_REV=18252
+#EXIST_REV=18252
 
 
 # Create build directory
@@ -172,27 +172,34 @@ BUILD_EXIST=true
 
 if [ ! -e $BUILDLOC/$EXIST_SRC_LOC ]; then
 	# exist rev < 0 means head
-	if [ $EXIST_REV -lt 0 ]; then
-		svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH $EXIST_SRC_LOC
-	else
-    	svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH -r $EXIST_REV $EXIST_SRC_LOC
-	fi
+	#if [ $EXIST_REV -lt 0 ]; then
+		#svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH $EXIST_SRC_LOC
+        git clone https://github.com/eXist-db/exist.git $EXIST_SRC_LOC
+        cd $EXIST_SRC_LOC
+        git checkout $EXIST_BRANCH
+	#else
+    	#svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH -r $EXIST_REV $EXIST_SRC_LOC
+    #    git clone https://github.com/eXist-db/exist.git $EXIST_SRC_LOC
+	#fi
 else 
-    LOCAL_EXIST_REV=`LANG=C svn info $EXIST_SRC_LOC |grep Revision | awk '{print $2}'`
+    cd $EXIST_SRC_LOC
+    git pull
+    git checkout $EXIST_BRANCH
+    #LOCAL_EXIST_REV=`LANG=C svn info $EXIST_SRC_LOC |grep Revision | awk '{print $2}'`
 	# exist rev < 0 means head
-	if [ $EXIST_REV -lt 0 ]; then
-		svn up $EXIST_SRC_LOC
-	else
-	    if [ $EXIST_REV != $LOCAL_EXIST_REV ]; then
-    	    svn up -r $EXIST_REV $EXIST_SRC_LOC
-		else
-		    # revision did not change, and exist*.war is in place no need to rebuild
-		    if [ -e $BUILDLOC/$EXIST_SRC_LOC/dist/exist*.war ];then
-		        echo "[SADE BUILD] found already build exist.war with correct revision"
-		        BUILD_EXIST=false
-		    fi
-		fi
-	fi
+	#if [ $EXIST_REV -lt 0 ]; then
+	#	svn up $EXIST_SRC_LOC
+	#else
+	#    if [ $EXIST_REV != $LOCAL_EXIST_REV ]; then
+    #	    svn up -r $EXIST_REV $EXIST_SRC_LOC
+	#	else
+	#	    # revision did not change, and exist*.war is in place no need to rebuild
+	#	    if [ -e $BUILDLOC/$EXIST_SRC_LOC/dist/exist*.war ];then
+	#	        echo "[SADE BUILD] found already build exist.war with correct revision"
+	#	        BUILD_EXIST=false
+	#	    fi
+	#	fi
+	#fi
 fi
 
 if [ $BUILD_EXIST == true ]; then
