@@ -205,11 +205,11 @@ fi
 if [ $BUILD_EXIST == true ]; then
     echo "[SADE BUILD] building eXist"
     # we want xslfo, a diff/patch may be better than sed here
-    cp $EXIST_SRC_LOC/extensions/build.properties $EXIST_SRC_LOC/extensions/local.build.properties
+    cp extensions/build.properties extensions/local.build.properties
     #sed -i 's/include.module.xslfo = false/include.module.xslfo = true/g' $EXIST_SRC_LOC/extensions/local.build.properties
-    sed -i 's/include.module.cqlparser = false/include.module.cqlparser = true/g' $EXIST_SRC_LOC/extensions/local.build.properties
+    sed -i 's/include.module.cqlparser = false/include.module.cqlparser = true/g' extensions/local.build.properties
 
-    cd $EXIST_SRC_LOC
+#    cd $EXIST_SRC_LOC
 #      show svn rev (does not work with svn 1.7)
 #    ./build.sh svn-download    
 #    do we really need to clean build dir? time demanding...
