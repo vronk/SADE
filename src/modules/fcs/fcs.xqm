@@ -940,7 +940,10 @@ declare function fcs:highlight-result($result as node()*, $match as node()*, $x-
      
 (:    problematic performance:)
     let $processed-result := if (exists($default-expand//exist:match)) then $default-expand
-                               else fcs:process-result($result, $match)
+    (: if the match is on the top-level base-elem itself, don't highlight.
+         it makes no sense to highlight the whole entry (page or so) :)
+                              else if ($result = $match) then $result 
+                                else fcs:process-result($result, $match)
 (:  do-nothing pass-through variant :)
 (:      let $processed-result := $default-expand                               :)
 (:                    else  :)
@@ -960,11 +963,7 @@ it still strips the inner elements (descendants) and only leaves the .//text() .
 
 :)
 declare function fcs:process-result($result as node()*, $matching as node()*) as item()* {
-       (: if the match is on the top-level base-elem itself, don't highlight.
-         it makes no sense to highlight the whole entry (page or so) :)
-    if ($result = $matching) then
-        $result
-     else 
+        
 for $node in $result
     return  typeswitch ($node)
         case text() return $node
