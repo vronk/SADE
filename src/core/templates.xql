@@ -12,7 +12,7 @@ import module namespace config="http://exist-db.org/xquery/apps/config" at "conf
 
 declare variable $templates:CONFIG_STOP_ON_ERROR := "stop-on-error";
 
-declare variable $templates:CONFIGURATION := QName("http://exist-db.org/xquery/templates", "configuration");
+declare variable $templates:CONFIGURATION := "configuration";
 declare variable $templates:CONFIGURATION_ERROR := QName("http://exist-db.org/xquery/templates", "ConfigurationError");
 declare variable $templates:NOT_FOUND := QName("http://exist-db.org/xquery/templates", "NotFound");
 declare variable $templates:TOO_MANY_ARGS := QName("http://exist-db.org/xquery/templates", "TooManyArguments");
