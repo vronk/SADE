@@ -397,6 +397,16 @@ declare function templates:process-surround($node as node(), $content as node(),
             $node
 };
 
+declare 
+    %templates:wrap
+function templates:each($node as node(), $model as map(*), $from as xs:string, $to as xs:string) {
+    for $item in $model($from)
+    return
+        element { node-name($node) } {
+            $node/@*, templates:process($node/node(), map:new(($model, map:entry($to, $item))))
+        }
+};
+
 declare function templates:if-parameter-set($node as node(), $model as map(*), $param as xs:string) as node()* {
     let $param := request:get-parameter($param, ())
     return
