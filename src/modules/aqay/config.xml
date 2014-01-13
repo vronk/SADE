@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config type="module">
+    <module key="aqay">
+        <param key="visibility">protected</param>
+        <param key="users">admin</param>
+    </module>
+    <container key="html-head"/>
+</config>
