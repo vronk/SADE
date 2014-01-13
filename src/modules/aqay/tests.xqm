@@ -14,14 +14,6 @@ declare namespace ds = "http://aac.ac.at/corpus_shell/dataset";
 declare namespace xhtml="http://www.w3.org/1999/xhtml";
 
 
-(: sample input: 
- :)
-(:declare variable $fcs-tests:config := doc("config.xml");
-declare variable $fcs-tests:cr-config := repo-utils:config("/db/apps/cr-xq/modules/fcs/config.xml");:)
-(:declare variable $fcs-tests:run-config := "run-config.xml";:)
-(:declare variable $fcs-tests:testsets-coll := "/db/cr/modules/testing/testsets/";
-declare variable $fcs-tests:results-coll := "/db/cr/modules/testing/results/";
-:)
 declare variable $fcs-tests:href-prefix := "tests.xql";
 
 (:~ this function is accessed by the testing-code to get configuration-options from the run-config :)
