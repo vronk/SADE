@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:sru="http://www.loc.gov/zing/srw/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:fcs="http://clarin.eu/fcs/1.0" version="2.0">
+<xsl:stylesheet xmlns:sru="http://www.loc.gov/zing/srw/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:fcs="http://clarin.eu/fcs/1.0" version="2.0">
     
     
     <!--
@@ -157,7 +157,7 @@
             <xsl:copy-of select="*[not(local-name()='extraTermData')]"/>
             <!-- <xsl:attribute name="pos" select="position()"/> -->
             <sru:extraTermData>
-<!--                pass pre-existing sru:extraTermData through-->                
+<!--                pass pre-existing sru:extraTermData through-->
                 <xsl:copy-of select="sru:extraTermData/*"/>
                 <fcs:position>
                     <xsl:value-of select="position() + $start-pos"/>
