@@ -5,10 +5,7 @@ import module namespace crday  = "http://aac.ac.at/content_repository/data-ay" a
 import module namespace diag =  "http://www.loc.gov/zing/srw/diagnostic/" at  "modules/diagnostics/diagnostics.xqm";
 import module namespace repo-utils = "http://aac.ac.at/content_repository/utils" at  "../../core/repo-utils.xqm";
 
-let $config-path := request:get-parameter("config", "/db/cr/conf/cr/config.xml"),
-    $op := request:get-parameter("operation", ""),
-(:    $config := doc($config-path),
-    $config := repo-utils:config($config-path), :) 
+let $op := request:get-parameter("operation", ""),
     $project := request:get-parameter("project",""),
     $config := config:config($project),
     $format := request:get-parameter("x-format",'htmlpage'),
