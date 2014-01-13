@@ -462,36 +462,45 @@ declare function templates:load-source($node as node(), $model as map(*)) as nod
     values found in the request - if present.
  :)
 declare function templates:form-control($node as node(), $model as map(*)) as node()* {
-    typeswitch ($node)
-        case element(input) return
+    let $control := local-name($node)
+    return
+        switch ($control)
+        case "input" return
+            let $type := $node/@type
             let $name := $node/@name
             let $value := request:get-parameter($name, ())
             return
                 if ($value) then
-                    element { node-name($node) } {
-                        $node/@* except $node/@value,
-                        attribute value { $value },
-                        $node/node()
-                    }
+                    switch ($type)
+                        case "checkbox" case "radio" return
+                            element { node-name($node) } {
+                                $node/@* except $node/@checked,
+                                attribute checked { "checked" },
+                                $node/node()
+                            }
+                        default return
+                            element { node-name($node) } {
+                                $node/@* except $node/@value,
+                                attribute value { $value },
+                                $node/node()
+                            }
                 else
                     $node
-        case element(select) return
+        case "select" return
             let $value := request:get-parameter($node/@name/string(), ())
             return
                 element { node-name($node) } {
-                    $node/@* except $node/@class,
-                    for $option in $node/option
+                    $node/@*,
+                    for $option in $node/*[local-name(.) = "option"]
                     return
-                        <option>
-                        {
+                        element { node-name($option) } {
                             $option/@*,
-                            if ($option/@value = $value) then
+                            if ($option/@value = $value or $option/string() = $value) then
                                 attribute selected { "selected" }
                             else
                                 (),
                             $option/node()
                         }
-                        </option>
                 }
         default return
             $node
