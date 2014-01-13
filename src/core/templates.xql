@@ -398,7 +398,7 @@ declare function templates:process-surround($node as node(), $content as node(),
 };
 
 declare 
-    %templates:wrap
+(:    %templates:wrap :)
 function templates:each($node as node(), $model as map(*), $from as xs:string, $to as xs:string) {
     for $item in $model($from)
     return
