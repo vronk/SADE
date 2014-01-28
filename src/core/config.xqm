@@ -88,6 +88,7 @@ declare function config:resolve-to-dbpath($model as map(*), $relPath as xs:strin
 (:    let $file-type := tokenize($relPath,"\.")[last()]:)
     let $project-template-dir := config:param-value($model, 'project-template-dir')
     let $project-dir := config:param-value($model, 'project-static-dir')
+    let $project-data-dir := config:param-value($model, 'data-dir')
     let $template-dir := config:param-value($model, 'template-dir')
     
     return 
@@ -95,6 +96,8 @@ declare function config:resolve-to-dbpath($model as map(*), $relPath as xs:strin
             xs:anyURI(concat($project-template-dir,$relPath))
     else if (doc-available(concat($project-dir,$relPath))) then
             xs:anyURI(concat($project-dir,$relPath))
+    else if (doc-available(concat($project-data-dir,$relPath))) then
+            xs:anyURI(concat($project-data-dir,$relPath))
     else 
             xs:anyURI(concat($template-dir,$relPath))
 };
@@ -113,7 +116,7 @@ declare function config:resolve-template-to-uri($model as map(*), $relPath as xs
 (:    let $file-type := tokenize($relPath,"\.")[last()]:)
  let $project-template-dir := config:param-value($model, 'project-template-dir'),
      $project-static-dir := config:param-value($model, 'project-static-dir'),
-     $project-data-dir := config:param-value($model, 'project-data-dir'),
+     $project-data-dir := config:param-value($model, 'data-dir'),
      $template-dir := config:param-value($model, 'template-dir'),
      $project-template-baseuri:= config:param-value($model, 'project-template-baseuri'),
      $project-data-baseuri:= config:param-value($model, 'project-data-baseuri'),
@@ -220,7 +223,8 @@ declare function config:app-info($node as node(), $model as map(*)) {
     let $config := $config("config")
     let $special-params := ('app-root', 'app-root-collection', 'base-url', 'project-dir', 'template-dir', 'template-baseuri',
                 'project-template-dir', 'project-template-baseuri', 
-                'project-data-dir', 'project-data-baseuri',
+                (: 'project-data-dir', :)
+                'project-data-baseuri',
                 'project-static-dir', 'project-static-baseuri',
                 'exist-controller', 'exist-path', 'exist-prefix', 'exist-resource', 'exist-root',
                 'request-uri', 'request-url')
@@ -262,6 +266,12 @@ declare function config:param-value($node as node()*, $model as map(*)*, $module
                                 concat(string-join(tokenize(request:get-url(),'/')[position() != last()],'/'),'/')
                           else if ($param-key='project-dir') then
                                 concat(util:collection-name($config[1]),'/')
+                           else if ($param-key='data-dir') then
+                                  let $project-dir:= util:collection-name($config[1])
+                                  let $data-dir:= $config//param[xs:string(@key)='data-dir'][parent::config]                                  
+                               return if (starts-with($data-dir,'/')) then $data-dir
+                                  else concat($project-dir, '/', $data-dir)                                  
+                                  
                           else if ($param-key='project-static-dir') then
                                   let $project-dir:= util:collection-name($config[1])
                                   return concat($project-dir, "/", $config:project-static-dir)
@@ -284,8 +294,10 @@ declare function config:param-value($node as node()*, $model as map(*)*, $module
                                 return concat($config:templates-baseuri, $template,'/')
                           else if ($param-key='project-data-baseuri') then
                                   let $project-id:= $config//param[xs:string(@key)='project-id'][parent::config]
-                                  let $data-path:= $config//param[xs:string(@key)='data-path'][parent::config]
-                                return concat($config-params:projects-baseuri, $project-id, '/', $data-path)
+                                  let $data-dir:= $config//param[xs:string(@key)='data-dir'][parent::config]
+                                  
+                               return if (starts-with($data-dir,'/')) then $data-dir
+                                  else concat($config-params:projects-baseuri, $project-id, '/', $data-dir)
                           else ()
     
     let $param-request := request:get-parameter($param-key,'')
@@ -383,6 +395,13 @@ declare function config:module-config() as item()* {
           return if (doc-available(concat($config:modules-dir, $coll, "/config.xml"))) 
           then doc(concat($config:modules-dir, $coll, "/config.xml"))else ()
 };
+
+declare function config:module-config($module as xs:string) as item()* {
+(:    for $coll in xmldb:get-child-collections($config:modules-dir):)
+      if (doc-available(concat($config:modules-dir, $module, "/config.xml"))) 
+          then doc(concat($config:modules-dir, $module, "/config.xml"))else ()
+};
+
 
 (:~ checks if there is a config-file for given project
   : @param $project project identifier

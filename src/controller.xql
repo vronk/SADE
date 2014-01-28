@@ -9,12 +9,7 @@ declare variable $exist:controller external;
 declare variable $exist:prefix external;
 declare variable $exist:root external;
 
-(:~
- : <code>$webResources<code> references suffixes of file types whose actual location in the
- : database should be looked up by config:resolve-template-to-uri(), mostly web resources 
- : which reside in templates.
-~:)
-let $webResources := ('js', 'css', 'png', 'jpg', 'gif', 'pdf', 'woff', 'ttf', 'eot')
+let $web-resources := ('js', 'css', 'png', 'jpg', 'gif', 'pdf', 'ttf', 'woff', 'eot')
 
 (:let $params := text:groups($exist:path, '^([^/]+)*/([^/]+)$'):)
 let $params := tokenize($exist:path, '/')
@@ -41,26 +36,32 @@ let $module-users := tokenize(config:param-value((),$full-config-map,$module,'',
  let $rel-path := if (contains($exist:path,$project )) then substring-after($exist:path, $project) else $exist:path
  
  let $protected := config:param-value($project-config-map,'visibility')='protected'
- let $allowed-users := tokenize(config:param-value($full-config-map,'users'),',')
+ let $allowed-users := tokenize(config:param-value($project-config-map,'users'),',')
  
 return         
-
+(:if (true()) then
+ <a>{($module, ($params[3] = $modules))}</a>
+else:)
 if ($exist:path eq "/" or $rel-path eq "/") then
     (: forward root (project) path to index.html :)
     <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
         <redirect url="index.html"/>
     </dispatch>
 else      
- if (ends-with($exist:resource, ".html")) then
- 
+(: else
+if (false()) then
+ <d>{$protected}</d>
+:)
+if (ends-with($exist:resource, ('.xml',".html"))) then
  (: this is a sequence of two steps, delivering result XOR (either one or the other)
     the first one only delivers result if login is necessary
     the second one, only if login is not necessary (i.e. project not protected or user already logged-in)
     :)
+        
     (if ($protected) then 
        (login:set-user("org.exist.demo.login", (), false()),    
             if (not(request:get-attribute("org.exist.demo.login.user")=$allowed-users)) then
- 
+(:                   <allowed-users>{$allowed-users}</allowed-users>:)
               <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
                   <forward url="{$exist:controller}/modules/access-control/login.html"/>
                   <view>
@@ -80,11 +81,13 @@ else
     else (), (: not protected, so also go to second part :)
 
    if (not($protected) or request:get-attribute("org.exist.demo.login.user")=$allowed-users) then
-    let $user := request:get-attribute("org.exist.demo.login.user")
+    let $user := request:get-attribute("org.exist.demo.login.user")   
    let $path := config:resolve-template-to-uri($project-config-map, $rel-path)
     (:      <forward url="{$exist:controller}/{$config:templates-dir}{$template-id}/{$exist:resource}"/>
          :)
-    return  <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
+    return 
+    
+    <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
          <forward url="{$path}" />
           
           <view>
@@ -108,7 +111,7 @@ else
 (: Requests for js, css are resolved via our special resolver 
 <forward url="{concat('/sade/templates/', $template-id, '/', $rel-path )}" />
 :)
-else if ($file-type = $webResources) then
+else if ($file-type = $web-resources) then
     (: if called from a module (with separate path-step (currently only /get) :)
     let $corr-rel-path := if (starts-with($rel-path, "/get")) then substring-after($rel-path, '/get') else $rel-path
     let $path := config:resolve-template-to-uri($project-config-map, $corr-rel-path)
@@ -121,6 +124,7 @@ else if ($file-type = $webResources) then
                     <add-parameter name="project" value="{$project}"/>
                     <add-parameter name="exist-path" value="{$exist:path}"/>
                     <add-parameter name="exist-resource" value="{$exist:resource}"/>
+                    <add-parameter name="path" value="{substring-after($path, '/facs/')}"/>
                 </forward>
             </dispatch>
             
@@ -135,9 +139,9 @@ else if (not($module='')) then
 else if (false()) then
 :)        
  else if (not($module='')) then
-   (if ($module-protected) then 
+   (if ($protected or $module-protected) then 
        (login:set-user("org.exist.demo.login", (), false()),    
-            if (not(request:get-attribute("org.exist.demo.login.user")=$module-users)) then
+            if (not(request:get-attribute("org.exist.demo.login.user")=$module-users or request:get-attribute("org.exist.demo.login.user")=$allowed-users)) then
  
                <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
                   <forward url="{$exist:controller}/modules/access-control/login.html"/>
@@ -157,7 +161,7 @@ else if (false()) then
         )
     else (), (: not protected, so also go to second part :)
 
-   if (not($module-protected) or request:get-attribute("org.exist.demo.login.user")=$module-users) then
+   if (not($protected or $module-protected) or request:get-attribute("org.exist.demo.login.user")=$module-users or request:get-attribute("org.exist.demo.login.user")=$allowed-users) then
     let $user := request:get-attribute("org.exist.demo.login.user")
    let $path := config:resolve-template-to-uri($project-config-map, $rel-path)
     (:      <forward url="{$exist:controller}/{$config:templates-dir}{$template-id}/{$exist:resource}"/>
@@ -174,6 +178,8 @@ else if (false()) then
         
     else () (: login :)
     )
+
+(: individual module switches obsoleted by generic module-handling
 
 else if (contains($exist:path, "fcs")) then
 
@@ -206,10 +212,10 @@ else if (contains($exist:path, "resource")) then
 	
     </dispatch>
 else if (starts-with($rel-path, "/get")) then
-(:        <forward url="{$exist:controller}/modules/viewer/get.xql" >
+(\:        <forward url="{$exist:controller}/modules/viewer/get.xql" >
 <forward url="index.html" />
       <view>
-       :)
+       :\)
 let $id := request:get-parameter ('id',substring-after($rel-path,'/get/'))
 let $format := request:get-parameter ('format','xml')
 return
@@ -241,7 +247,7 @@ return
                 </forward>
               </view>
         </dispatch>
-        
+:)        
 else
 (:   <result>{$rel-path}</result>  :)
   (: everything else is passed through :)
