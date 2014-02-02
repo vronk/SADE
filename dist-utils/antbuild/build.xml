@@ -100,6 +100,7 @@
     </target>
 
     <target name="ant-dependencies" depends="install-ivy">
+        <property name="ivy.default.ivy.user.dir" value="${basedir}/ivy"/>
         <ivy:retrieve conf="tasks" />
         <path id="classpath">
             <fileset dir="./lib">
