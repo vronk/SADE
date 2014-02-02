@@ -14,4 +14,7 @@
   <target name="clean">
     <delete dir="build"/>
   </target>
+  <target name="sade-dist-build">
+    <ant antfile="dist-utils/antbuild/build.xml" inheritAll="false"/> 
+  </target>
 </project>
