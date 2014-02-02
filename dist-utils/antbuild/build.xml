@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    basedir="." 
+    default="build" 
+    name="SADE"
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:git="antlib:com.rimerosolutions.ant.git">
+
+    <property name="build.dir" value="${basedir}/build"/>
+    <property name="resources.dir" value="${basedir}/resources"/>
+
+    <property name="ivy.install.version" value="2.3.0"/>
+    <property name="ivy.jar.dir" value="${basedir}/lib"/>
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
+
+    <property name="exist.git" value="https://github.com/eXist-db/exist.git"/>
+    <property name="exist.branch" value="develop"/>
+<!--    <property name="exist.branch" value="00db4c3d9538337b705f7f30c98ba4a54bf05227" /> -->
+
+    <property name="exist.dest" value="${build.dir}/exist-git"/> 
+    <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.1"/> 
+    <property name="sade.src" value="../../"/> 
+
+    <property name="sade.tgz.file" value="${build.dir}/sade.tar.gz"/>
+
+
+    <target name="build" depends="git">
+        <echo message="building eXist"/>
+
+        <!-- include cqlparser in build-->
+        <copy file="${resources.dir}/exist.extension.properties.override" tofile="${exist.dest}/extensions/local.build.properties" />
+
+        <!-- call antfile for exist build & dist -->
+        <!--ant antfile="ebuild.xml" inheritAll="false" /-->
+        <ant antfile="${exist.dest}/build.xml" inheritAll="false">
+            <target name="all"/>
+            <target name="dist" />
+        </ant>
+
+        <!-- include cqlparser in conf.xml -->
+        <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" />
+
+        <echo message="building and integrating SADE"/>
+        <ant antfile="${sade.src}/build.xml" inheritAll="false" />
+        <!-- add xar files to autodeploy -->
+        <mkdir dir="${exist.dist}/autodeploy"/>
+        <copy todir="${exist.dist}/autodeploy">
+            <fileset dir="${exist.dest}/autodeploy/" includes="*.xar"/>
+            <fileset dir="${sade.src}/build" includes="*.xar"/>
+        </copy>
+        <!-- add bin/sade.sh symlink for backwards compatibility / does not work with tar / zip-->
+        <!--symlink link="${exist.dist}/bin/sade.sh" resource="../tools/wrapper/bin/exist.sh"/>
+        <symlink link="${exist.dist}/bin/sade.bat" resource="../tools/wrapper/bin/exist.bat"/-->
+
+        <antcall target="tgz" />
+
+    </target>
+
+    <target name="tgz">
+        <delete file="${sade.tgz.file}" />
+        <delete dir="${build.dir}/sade" />
+        <move file="${exist.dist}" toFile="${build.dir}/sade" />
+        <tar destfile="${sade.tgz.file}" compression="gzip" longfile="gnu">
+            <tarfileset dir="${build.dir}" filemode="755">
+                <include name="sade/**/*.sh"/>
+                <include name="sade/tools/wrapper/bin/**"/>
+            </tarfileset>
+            <tarfileset dir="${build.dir}" includes="sade/**">
+                <exclude name="sade/**/*.sh"/>
+                <exclude name="sade/tools/wrapper/bin/**" />
+                <!--exclude name="sade/extensions/**" />
+                <exclude name="sade/src/**" /-->
+            </tarfileset>
+        </tar>
+    </target>
+
+    <target name="git" depends="ant-dependencies">
+        <!-- TODO: use http://ant.apache.org/manual/properties.html#if+unless -->
+        <if>
+          <available file="${exist.dest}" type="dir" />
+
+          <then>
+            <echo message="updating exist git repository" />
+            <git:git directory="${exist.dest}" verbose="false">
+                 <git:checkout branchName="${exist.branch}" />
+                 <!-- todo: pull does not (and does not need to) work with detached branch -->
+                 <git:pull />
+            </git:git>
+          </then>
+
+          <else>
+            <echo message="cloning exist git repository"/>
+            <git:git directory="${exist.dest}" verbose="false">
+                 <git:clone uri="${exist.git}"/>
+                 <git:checkout branchName="${exist.branch}" />
+            </git:git>
+
+          </else>
+        </if>
+    </target>
+
+    <target name="ant-dependencies" depends="install-ivy">
+        <ivy:retrieve conf="tasks" />
+        <path id="classpath">
+            <fileset dir="./lib">
+                <include name="*.jar"/>
+            </fileset>
+        </path>
+        <!-- git -->
+        <taskdef uri="antlib:com.rimerosolutions.ant.git"
+                 resource="com/rimerosolutions/ant/git/jgit-ant-lib.xml"
+                 classpathref="classpath"/>
+        <!-- contrib has if -->
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="classpath" />
+    </target>
+
+    <target name="download-ivy" unless="skip.download">
+    	<mkdir dir="${ivy.jar.dir}"/>
+    	<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+    		 dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <target name="install-ivy" depends="download-ivy" description="--> install ivy">
+    	<path id="ivy.lib.path">
+    	    <pathelement location="${ivy.jar.file}"/>
+    	</path>
+    	<taskdef resource="org/apache/ivy/ant/antlib.xml"
+    	          uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>  
+
+</project>
