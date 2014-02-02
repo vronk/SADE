@@ -31,11 +31,11 @@
         <copy file="${resources.dir}/exist.extension.properties.override" tofile="${exist.dest}/extensions/local.build.properties" />
 
         <!-- call antfile for exist build & dist -->
-        <!--ant antfile="ebuild.xml" inheritAll="false" /-->
-        <ant antfile="${exist.dest}/build.xml" inheritAll="false">
+        <ant antfile="ebuild.xml" inheritAll="false" />
+        <!--ant antfile="${exist.dest}/build.xml" inheritAll="false">
             <target name="all"/>
             <target name="dist" />
-        </ant>
+        </ant-->
 
         <!-- include cqlparser in conf.xml -->
         <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" />
