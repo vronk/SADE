@@ -127,7 +127,13 @@ else if ($file-type = $web-resources) then
                     <add-parameter name="path" value="{substring-after($path, '/facs/')}"/>
                 </forward>
             </dispatch>
-            
+        (: use shared resources from exist if requested with /$shared/ :)
+        else if (contains($path, "/$shared/")) then
+            <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
+                <forward url="/shared-resources/{substring-after($exist:path, '/$shared/')}">
+                    <set-header name="Cache-Control" value="max-age=3600, must-revalidate"/>
+                </forward>
+            </dispatch>               
         else
         <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
             <forward url="{$path}" />        
