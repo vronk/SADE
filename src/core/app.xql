@@ -3,14 +3,6 @@ module namespace app="http://sade/app";
 import module namespace templates="http://exist-db.org/xquery/templates" at "templates.xql";
 import module namespace config="http://exist-db.org/xquery/apps/config" at "config.xqm";
 import module namespace config-params="http://exist-db.org/xquery/apps/config-params" at "config.xql";
-(:
-import module namespace templates="http://exist-db.org/xquery/templates" at "templates.xql";
-
-import module namespace kwic="http://exist-db.org/xquery/kwic"
-    at "resource:org/exist/xquery/lib/kwic.xql";
-import module namespace fcs = "http://clarin.eu/fcs/1.0" at "/db/cr/fcs.xqm";
-import module namespace repo-utils = "http://aac.ac.at/content_repository/utils" at  "/db/cr/repo-utils.xqm";
-:)
 
  (:
 declare 

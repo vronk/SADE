@@ -117,7 +117,8 @@ declare function fcs:repo($config) as item()* {
       	 let $cql-query := $query,
 			$start-item := request:get-parameter("startRecord", 1),
 			$max-items := request:get-parameter("maximumRecords", 50),
-			$x-dataview := string-join(request:get-parameter("x-dataview", repo-utils:config-value($config, 'default.dataview')),',')
+			(:~ tentative hack: always add title dataview (should make life easier) :) 
+			$x-dataview := string-join(('title', request:get-parameter("x-dataview", repo-utils:config-value($config, 'default.dataview'))),',')
             (: return cr:search-retrieve($cql-query, $query-collections, $format, xs:integer($start-item), xs:integer($max-items)) :)
             return 
             if (not($recordPacking = ('string','xml'))) then 
@@ -636,7 +637,7 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
                                 
                           let $nav-data-view := if (contains($data-view, 'navigation')) then $data-view else concat($data-view, '&amp;x-dataview=navigation')
                           (:let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else ""                                                 
-                          let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else "":)
+                          lt $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=resourcefragment-pid="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=full&amp;x-dataview=navigation&amp;x-context=', $x-context) else "":)
                           let $rf-prev-ref := if (not($rf-prev='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-prev), '"&amp;x-dataview=', $data-view,'&amp;x-context=', $x-context) else ""
                            let $rf-next-ref:= if (not($rf-next='')) then concat('?operation=searchRetrieve&amp;query=', $sort-index, '="', xmldb:encode-uri($rf-next), '"&amp;x-dataview=', $data-view, '&amp;x-context=', $x-context) else ""
                           
@@ -648,10 +649,10 @@ declare function fcs:format-record-data($orig-sequence-record-data as node(), $r
     let $dv-facs :=     if (contains($data-view,'facs')) 
                         then 
                             let $facs-uri:=fcs:apply-index ($record-data-input, "facs-uri",$x-context, $config)
-    				        return <fcs:DataView type="facs" ref="{$facs-uri[1]}"/>
+    				        return attribute ref {$facs-uri[1]}
     				    else ()
                      
-    let $dv-title := <fcs:DataView type="title">{$title[1]}</fcs:DataView>
+    let $dv-title := data($title[1])
     
     let $dv-xmlescaped :=   if (contains($data-view,'xmlescaped')) 
                             then util:serialize($record-data,'method=xml, indent=yes')
@@ -940,7 +941,10 @@ declare function fcs:highlight-result($result as node()*, $match as node()*, $x-
      
 (:    problematic performance:)
     let $processed-result := if (exists($default-expand//exist:match)) then $default-expand
-                               else fcs:process-result($result, $match)
+    (: if the match is on the top-level base-elem itself, don't highlight.
+         it makes no sense to highlight the whole entry (page or so) :)
+                              else if ($result = $match) then $result 
+                                else fcs:process-result($result, $match)
 (:  do-nothing pass-through variant :)
 (:      let $processed-result := $default-expand                               :)
 (:                    else  :)
@@ -960,11 +964,7 @@ it still strips the inner elements (descendants) and only leaves the .//text() .
 
 :)
 declare function fcs:process-result($result as node()*, $matching as node()*) as item()* {
-       (: if the match is on the top-level base-elem itself, don't highlight.
-         it makes no sense to highlight the whole entry (page or so) :)
-    if ($result = $matching) then
-        $result
-     else 
+        
 for $node in $result
     return  typeswitch ($node)
         case text() return $node

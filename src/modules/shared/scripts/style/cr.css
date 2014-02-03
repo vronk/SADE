@@ -4,5 +4,5 @@ span.persName ,span.person { font-weight: bold;  color: #009900; }
 span.placeName { font-weight: bold;  color: #990000; }
 span.rs { font-weight: bold;  color: #333366; }
 
-.inline-wrap {position: relative;}
+.inline-wrap {position: relative; display:inline;}
 .inline-wrap .attributes { background-color: #CCCCFF; position: absolute; top: 1.5em; z-index:4; }
