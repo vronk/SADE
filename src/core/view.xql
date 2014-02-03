@@ -14,6 +14,7 @@ import module namespace config="http://exist-db.org/xquery/apps/config" at "conf
    import module namespace app="http://sade/app" at "app.xql";  
    import module namespace test="http://sade/test" at "../modules/test/test.xqm";
    import module namespace fcs="http://sade/fcs" at "../modules/fcs/fcs-sade.xqm";
+   import module namespace nav="http://sade/tmpl-nav" at "../modules/tmpl-nav/tmpl-nav.xqm";
 
 declare option exist:serialize "method=html5 media-type=text/html";
 
