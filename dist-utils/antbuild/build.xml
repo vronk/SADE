@@ -55,6 +55,7 @@
        <java classname="org.apache.tools.ant.launch.Launcher" fork="true">
          <arg value="-Dant.home=${exist.dest}/tools/ant"/>
          <arg value="-Dant.library.dir=${exist.dest}/tools/ant/lib"/>
+         <arg value="-Divy.default.ivy.user.dir=${basedir}/ivy" />
          <arg value="-Djavax.xml.transform.TransformerFactory=org.apache.xalan.processor.TransformerFactoryImpl"/>
          <arg value="-f"/>
          <arg value="${exist.dest}/build.xml"/>
