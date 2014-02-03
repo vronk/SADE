@@ -62,9 +62,7 @@ declare variable $config:app-root :=
             $rawPath
     return
 (:            $modulePath:)
-        (: this does not work with exist-2.1-devel, TODO: find out why and disable workaround :)
-        (: substring-before($modulePath, "/core") :)
-        "/apps/SADE"
+        substring-before($modulePath, "/core")
 ;
 
 (:~ extracting the context collection of the application :)  
