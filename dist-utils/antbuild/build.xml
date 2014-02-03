@@ -30,12 +30,7 @@
         <!-- include cqlparser in build-->
         <copy file="${resources.dir}/exist.extension.properties.override" tofile="${exist.dest}/extensions/local.build.properties" />
 
-        <!-- call antfile for exist build & dist -->
-        <ant antfile="ebuild.xml" inheritAll="false" />
-        <!--ant antfile="${exist.dest}/build.xml" inheritAll="false">
-            <target name="all"/>
-            <target name="dist" />
-        </ant-->
+        <antcall target="existBuild"/>
 
         <!-- include cqlparser in conf.xml -->
         <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" />
@@ -54,6 +49,22 @@
 
         <antcall target="tgz" />
 
+    </target>
+
+    <target name="existBuild">
+       <java classname="org.apache.tools.ant.launch.Launcher" fork="true">
+         <arg value="-Dant.home=${exist.dest}/tools/ant"/>
+         <arg value="-Dant.library.dir=${exist.dest}/tools/ant/lib"/>
+         <arg value="-Djavax.xml.transform.TransformerFactory=org.apache.xalan.processor.TransformerFactoryImpl"/>
+         <arg value="-f"/>
+         <arg value="${exist.dest}/build.xml"/>
+         <arg value="all"/>
+         <arg value="dist"/>
+         <classpath>
+           <pathelement location="${exist.dest}/tools/ant/lib/ant-launcher.jar"/>
+           <!--pathelement path="${java.class.path}"/-->
+         </classpath>
+       </java>
     </target>
 
     <target name="tgz">
