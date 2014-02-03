@@ -20,11 +20,13 @@
     <property name="exist.dest" value="${build.dir}/exist-git"/> 
     <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.1"/> 
     <property name="sade.src" value="../../"/> 
+    <property name="markdown.git" value="https://github.com/wolfgangmm/exist-markdown.git"/>
+    <property name="markdown.dest" value="${build.dir}/exist-markdown"/>
 
     <property name="sade.tgz.file" value="${build.dir}/sade.tar.gz"/>
 
 
-    <target name="build" depends="git">
+    <target name="build" depends="exist-git,markdown">
         <echo message="building eXist"/>
 
         <!-- include cqlparser in build-->
@@ -42,6 +44,7 @@
         <copy todir="${exist.dist}/autodeploy">
             <fileset dir="${exist.dest}/autodeploy/" includes="*.xar"/>
             <fileset dir="${sade.src}/build" includes="*.xar"/>
+            <fileset dir="${markdown.dest}/build" includes="*.xar"/>
         </copy>
         <!-- add bin/sade.sh symlink for backwards compatibility / does not work with tar / zip-->
         <!--symlink link="${exist.dist}/bin/sade.sh" resource="../tools/wrapper/bin/exist.sh"/>
@@ -86,7 +89,27 @@
         </tar>
     </target>
 
-    <target name="git" depends="ant-dependencies">
+    <target name="markdown" depends="ant-dependencies">
+        <if>
+          <available file="${markdown.dest}" type="dir" />
+          <then>
+            <echo message="updating exist-markdown git repository" />
+            <git:git directory="${markdown.dest}" verbose="false">
+                 <git:pull />
+            </git:git>
+          </then>
+          <else>
+            <echo message="cloning exist-markdown git repository from ${markdown.git}"/>
+            <git:git directory="${markdown.dest}" verbose="false">
+                 <git:clone uri="${markdown.git}"/>
+            </git:git>
+          </else>
+        </if>
+        <echo message="packaging markdown.xar"/>
+        <ant antfile="${markdown.dest}/build.xml" inheritAll="false" />      
+    </target>
+
+    <target name="exist-git" depends="ant-dependencies">
         <!-- TODO: use http://ant.apache.org/manual/properties.html#if+unless -->
         <if>
           <available file="${exist.dest}" type="dir" />
