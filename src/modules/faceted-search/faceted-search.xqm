@@ -22,7 +22,7 @@ function fsearch:results($node as node(), $model as map(*)) as map()* {
         return
            $hit
     
-    let $num :=  xs:integer(config:module-param-value($model, "search",  "hitsPerPage"))     
+    let $num :=  xs:integer(config:module-param-value($model, "faceted-search",  "hitsPerPage"))     
     let $pages := ceiling(count($hits) div $num)
     let $start := $page * $num - $num + 1
     
@@ -52,7 +52,7 @@ function fsearch:hitstart($node as node(), $model as map(*)) {
 declare 
     %templates:wrap
 function fsearch:hitend($node as node(), $model as map(*)) {
-    let $num := xs:integer(config:module-param-value($model, "search",  "hitsPerPage"))  
+    let $num := xs:integer(config:module-param-value($model, "faceted-search",  "hitsPerPage"))  
     let $res := $model("start") + $num - 1
     return if($res > $model("totalhits")) 
         then $model("totalhits")
@@ -142,13 +142,12 @@ function fsearch:facetTitle($node as node(), $model as map(*)) {
 
 declare function fsearch:facet($node as node(), $model as map(*)) as item()* {
 
-    for $facet in $model("config")//module[@key="search"]//facet
+    for $facet in $model("config")//module[@key="faceted-search"]//facet
         return
             <li><strong>{xs:string($facet/@title)}</strong>
                 <ul class="hideMore">{local:deselected-for-key($model, xs:string($facet/@key))}{$model("facets")(xs:string($facet/@key))}</ul>
             </li>
                 
-    
 };
 
 declare function local:facet($model as map(*), $hits as node()*, $key as xs:string, $types as xs:string*) as node()* {
