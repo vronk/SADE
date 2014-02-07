@@ -126,7 +126,7 @@ declare function fsearch:facets($model as map(*), $hits) as map() {
     map:new( 
         for $facet in $model("config")//module[@key="search"]//facet
         return
-            map:entry(xs:string($facet/@key), local:facet($hits, $facet/@key, $facet//xpath/text()))
+            map:entry(xs:string($facet/@key), local:facet($model, $hits, $facet/@key, $facet//xpath/text()))
     )
 };
 
@@ -145,13 +145,13 @@ declare function fsearch:facet($node as node(), $model as map(*)) as item()* {
     for $facet in $model("config")//module[@key="search"]//facet
         return
             <li><strong>{xs:string($facet/@title)}</strong>
-                <ul class="hideMore">{local:deselected-for-key(xs:string($facet/@key))}{$model("facets")(xs:string($facet/@key))}</ul>
+                <ul class="hideMore">{local:deselected-for-key($model, xs:string($facet/@key))}{$model("facets")(xs:string($facet/@key))}</ul>
             </li>
                 
     
 };
 
-declare function local:facet($hits as node()*, $key as xs:string, $types as xs:string*) as node()* {
+declare function local:facet($model as map(*), $hits as node()*, $key as xs:string, $types as xs:string*) as node()* {
     
     let $query := request:get-parameter("q", ())
     let $facetReq := local:facetQueryFromRequest()
@@ -169,7 +169,7 @@ declare function local:facet($hits as node()*, $key as xs:string, $types as xs:s
     let $unnormal := for $x in util:eval($fquery)
         return <un>{normalize-space($x)}</un>
     
-    let $deselected := local:deselected-for-key($key)
+    let $deselected := local:deselected-for-key($model, $key)
         
     for $facet in distinct-values($unnormal)
         let $freq :=  count($unnormal[. eq $facet])
@@ -193,7 +193,7 @@ declare function local:facet($hits as node()*, $key as xs:string, $types as xs:s
 
 };
 
-declare function local:deselected-for-key($key as xs:string) {
+declare function local:deselected-for-key($model, $key as xs:string) {
     
     let $query := request:get-parameter("q", ())
     
@@ -287,4 +287,5 @@ declare function local:facetSelected($key as xs:string, $value as xs:string) as 
     
     return boolean($r)
 };
+
 
