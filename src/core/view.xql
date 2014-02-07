@@ -11,11 +11,12 @@ xquery version "3.0";
 (:import module namespace resolver="http://exist-db.org/xquery/resolver" at "resolver.xql";:)
 import module namespace templates="http://exist-db.org/xquery/templates" at "templates.xql";
 import module namespace config="http://exist-db.org/xquery/apps/config" at "config.xqm";
-   import module namespace app="http://sade/app" at "app.xql";  
-   import module namespace test="http://sade/test" at "../modules/test/test.xqm";
-   import module namespace fcs="http://sade/fcs" at "../modules/fcs/fcs-sade.xqm";
-   import module namespace nav="http://sade/tmpl-nav" at "../modules/tmpl-nav/tmpl-nav.xqm";
-   import module namespace mviewer="http://sade/multiviewer" at "../modules/multiviewer/multiviewer.xqm";
+import module namespace app="http://sade/app" at "app.xql";  
+import module namespace test="http://sade/test" at "../modules/test/test.xqm";
+import module namespace fcs="http://sade/fcs" at "../modules/fcs/fcs-sade.xqm";
+import module namespace nav="http://sade/tmpl-nav" at "../modules/tmpl-nav/tmpl-nav.xqm";
+import module namespace mviewer="http://sade/multiviewer" at "../modules/multiviewer/multiviewer.xqm";
+import module namespace fsearch="http://sade/faceted-search" at "../modules/faceted-search/faceted-search.xqm";
 
 declare option exist:serialize "method=html5 media-type=text/html";
 

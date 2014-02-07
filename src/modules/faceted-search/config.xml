@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config type="module">
+    <module key="faceted-search">
+        <param key="kwic.hits">3</param>
+        <param key="thumbnail">true</param>
+        <param key="hitsPerPage">10</param>
+    </module>
+    <!-- added by faceted search -->
+    <container key="html-head">
+        <script type="text/javascript" src="modules/faceted-search/js/bootstrap-paginator.min.js"/>
+    </container>
+</config>
