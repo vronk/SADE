@@ -73,11 +73,12 @@ function fsearch:pages($node as node(), $model as map(*)) {
 
 (: TODO: title-xpath should be configurable :)
 declare function fsearch:resultTitle($node as node(), $model as map(*)) {
-    let $docloc := config:param-value($model, "data-dir") || "/xml/data/" || util:document-name($model("hit"))
+    let $relloc := "/xml/data/" || util:document-name($model("hit"))
+    let $absloc := config:param-value($model, "data-dir") || $relloc
     let $viewdoc := config:module-param-value($model,'faceted-search','viewer.html')
     return 
-        <a href="{$viewdoc}{$docloc}">
-            {doc($docloc)//tei:fileDesc//tei:titleStmt/tei:title/text()}
+        <a href="{$viewdoc}{$relloc}">
+            {doc($absloc)//tei:fileDesc//tei:titleStmt/tei:title/text()}
             {$model("hit")//bol:a0/text()}
         </a>
 };
