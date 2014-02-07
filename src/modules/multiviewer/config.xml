@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config type="module">
+    <module key="multiviewer">
+        <param key="xslt">
+            <stylesheet namespace="http://www.tei-c.org/ns/1.0" location="xslt/db2xhtml.xsl">
+                <parameters>
+                    <param name="graphicsPrefix" value="http://localhost:8080/digilib"/>
+                    <param name="graphicsSuffix" value="?dw=10"/>
+                </parameters>
+            </stylesheet>
+        </param>
+    </module>
+    <container key="html-head">
+        /* added by multiviewer-imodule */
+        <script type="text/css" src="modules/multiviewer/stylesheets/tg-tei.css"/>
+    </container>
+</config>
