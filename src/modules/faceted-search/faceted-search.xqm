@@ -126,7 +126,7 @@ function fsearch:resultId($node as node(), $model as map(*)) {
 declare function fsearch:facets($model as map(*), $hits) as map() {
     
     map:new( 
-        for $facet in $model("config")//module[@key="search"]//facet
+        for $facet in $model("config")//module[@key="faceted-search"]//facet
         return
             map:entry(xs:string($facet/@key), local:facet($model, $hits, $facet/@key, $facet//xpath/text()))
     )
@@ -219,6 +219,7 @@ declare function local:deselected-for-key($model, $key as xs:string) {
             else ()
 };
 
+(: TODO: queryroot should be configurable :)
 declare function local:getHits($model as map(*), $target as xs:string) as node()*{
     
     let $query := request:get-parameter("q", ())
@@ -288,5 +289,4 @@ declare function local:facetSelected($key as xs:string, $value as xs:string) as 
     
     return boolean($r)
 };
-
 
