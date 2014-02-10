@@ -9,14 +9,14 @@
         <param key="result-title">
             <xpath>//tei:fileDesc//tei:titleStmt/tei:title/text()</xpath>
         </param>
-        <param key="facets">
+        <!--param key="facets">
             <facet key="keywords" title="Schlagwörter">
                 <xpath>tei:term</xpath>
             </facet>
             <facet key="dates" title="Zeit">
                 <xpath>tei:date/@when</xpath>
             </facet>
-        </param>
+        </param-->
     </module>
     <!-- added by faceted search -->
     <container key="html-head">

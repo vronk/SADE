@@ -16,11 +16,26 @@ function fsearch:results($node as node(), $model as map(*)) as map()* {
     let $target := config:param-value($model, "data-dir")
     let $hits := local:get-hits($model, $target)
 
+(:    let $order-by := "$hit//tei:title[@type='main'][1]/text(), $hit//bol:a0":)
+
+    let $obreq := request:get-parameter("order-by", "relevance")
+    let $order-by := string-join($model("config")//module[@key="faceted-search"]//order[@key = $obreq]//xpath , ",")
+(:    let $order := if(request:get-parameter("order", "ascending") = "ascending"):)
+
     let $hitsordered :=
-        for $hit in $hits
-        order by ft:score($hit) descending
-        return
-           $hit
+        
+(:(:        order by ft:score($hit) descending:):)
+(:        if order by util:eval($order-by) descending:)
+(:        return:)
+(:           $hit:)
+        if(request:get-parameter("order", "ascending") = "ascending") then
+                for $hit in $hits
+                order by util:eval($order-by) ascending
+                return $hit
+            else
+                for $hit in $hits
+                order by util:eval($order-by) descending
+                return $hit 
     
     let $num :=  xs:integer(config:module-param-value($model, "faceted-search",  "hits-per-page"))     
     let $pages := ceiling(count($hits) div $num)
@@ -74,13 +89,13 @@ function fsearch:pages($node as node(), $model as map(*)) {
 declare function fsearch:result-title($node as node(), $model as map(*)) {
     let $relloc := "/xml/data/" || util:document-name($model("hit"))
     let $absloc := config:param-value($model, "data-dir") || $relloc
-    let $viewdoc := config:module-param-value($model,'faceted-search','viewer.html')
+    let $viewdoc := config:module-param-value($model,'faceted-search','viewer-html')
  
     return 
         <a href="{$viewdoc}{$relloc}">
             {
                 for $titleQuery in $model("config")//module[@key="faceted-search"]/param[@key="result-title"]//xpath
-                return util:eval("$model('hit')" || $titleQuery)
+                return util:eval("($model('hit')" || $titleQuery || ")[1]")
             }
         </a>
 };
@@ -157,6 +172,8 @@ declare function fsearch:facet($node as node(), $model as map(*)) as item()* {
 declare function local:facet($model as map(*), $hits as node()*, $key as xs:string, $types as xs:string*) as node()* {
     
     let $query := request:get-parameter("q", ())
+    let $order := request:get-parameter("order", ())
+    let $order-by := request:get-parameter("order-by", ())
     let $facetReq := local:facet-query-from-request()
     
     (: the link to the html page displaying this module :)
@@ -183,13 +200,13 @@ declare function local:facet($model as map(*), $hits as node()*, $key as xs:stri
                    let $facetRemoveQuery := replace($facetReq, $key || ":" || xmldb:encode($facet) || "," , "")
                    return 
                        <li class="facetSelected">
-                            <a class="facet-minus" href="{$search-html}?q={$query}&amp;facet={$facetRemoveQuery}">-</a>
+                            <a class="facet-minus" href="{$search-html}?q={$query}&amp;facet={$facetRemoveQuery}&amp;order={$order}&amp;order-by={$order-by}">-</a>
                             {$facet} ({$freq}) 
                         </li>
                else 
                    <li>
-                       <a class="facet-minus" href="{$search-html}?q={$query}&amp;facet={$key}:!{xmldb:encode($facet)},{$facetReq}">-</a>
-                       <a href="{$search-html}?q={$query}&amp;facet={$key}:{xmldb:encode($facet)},{$facetReq}">{$facet}</a> ({$freq})
+                       <a class="facet-minus" href="{$search-html}?q={$query}&amp;facet={$key}:!{xmldb:encode($facet)},{$facetReq}&amp;order={$order}&amp;order-by={$order-by}">-</a>
+                       <a href="{$search-html}?q={$query}&amp;facet={$key}:{xmldb:encode($facet)},{$facetReq}&amp;order={$order}&amp;order-by={$order-by}">{$facet}</a> ({$freq})
                    </li> 
             
         
@@ -199,6 +216,8 @@ declare function local:facet($model as map(*), $hits as node()*, $key as xs:stri
 declare function local:deselected-for-key($model, $key as xs:string) {
     
     let $query := request:get-parameter("q", ())
+    let $order := request:get-parameter("order", ())
+    let $order-by := request:get-parameter("order-by", ())
     
     (: the link to the html page displaying this module :)
     let $search-html := config:param-value($model,'exist-resource')
@@ -213,7 +232,7 @@ declare function local:deselected-for-key($model, $key as xs:string) {
                         let $facetRemoveQuery := replace($facetReq, $key || ":" || $parts[2] || "," , "")
                         return 
                             <li class="facet-deselected">
-                                <a class="facet-plus" href="{$search-html}?q={$query}&amp;facet={$facetRemoveQuery}">+</a>
+                                <a class="facet-plus" href="{$search-html}?q={$query}&amp;facet={$facetRemoveQuery}&amp;order={$order}&amp;order-by={$order-by}">+</a>
                                 {xmldb:decode(substring-after($parts[2], "!"))}
                             </li>
                     else
