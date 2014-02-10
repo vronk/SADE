@@ -219,16 +219,19 @@ declare function local:deselected-for-key($model, $key as xs:string) {
             else ()
 };
 
-(: TODO: queryroot should be configurable :)
 declare function local:getHits($model as map(*), $target as xs:string) as node()*{
     
     let $query := request:get-parameter("q", ())
-
     let $fxquery := local:constructFacetQuery($model)
  
-    let $xquery1 := concat("collection($target)//tei:TEI",$fxquery,"[ft:query(.//tei:text, $query)]")
-    let $xquery2 := concat("collection($target)//bol:Blumenbachiana",$fxquery,"[ft:query(., $query)]")
-    let $xquery := concat($xquery1, " | ", $xquery2)
+    let $xqueries :=  for $queryRoot in $model("config")//module[@key="faceted-search"]/param[@key="queryRoot"]//xpath
+        return 
+            if($query) then
+                "collection($target)//" || $queryRoot || $fxquery || "[ft:query(., $query)]"
+            else
+                "collection($target)//" || $queryRoot || $fxquery
+ 
+    let $xquery := string-join($xqueries, " | ")
     return util:eval($xquery)
     
 };
@@ -289,4 +292,7 @@ declare function local:facetSelected($key as xs:string, $value as xs:string) as 
     
     return boolean($r)
 };
+
+
+
 
