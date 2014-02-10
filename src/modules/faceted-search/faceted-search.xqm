@@ -71,15 +71,17 @@ function fsearch:pages($node as node(), $model as map(*)) {
     $model("pages")
 };
 
-(: TODO: title-xpath should be configurable :)
 declare function fsearch:result-title($node as node(), $model as map(*)) {
     let $relloc := "/xml/data/" || util:document-name($model("hit"))
     let $absloc := config:param-value($model, "data-dir") || $relloc
     let $viewdoc := config:module-param-value($model,'faceted-search','viewer.html')
+ 
     return 
         <a href="{$viewdoc}{$relloc}">
-            {doc($absloc)//tei:fileDesc//tei:titleStmt/tei:title/text()}
-            {$model("hit")//bol:a0/text()}
+            {
+                for $titleQuery in $model("config")//module[@key="faceted-search"]/param[@key="result-title"]//xpath
+                return util:eval("$model('hit')" || $titleQuery)
+            }
         </a>
 };
 
@@ -227,9 +229,9 @@ declare function local:get-hits($model as map(*), $target as xs:string) as node(
     let $xqueries :=  for $query-root in $model("config")//module[@key="faceted-search"]/param[@key="query-root"]//xpath
         return 
             if($query) then
-                "collection($target)//" || $query-root || $fxquery || "[ft:query(., $query)]"
+                "collection($target)" || $query-root || $fxquery || "[ft:query(., $query)]"
             else
-                "collection($target)//" || $query-root || $fxquery
+                "collection($target)" || $query-root || $fxquery
  
     let $xquery := string-join($xqueries, " | ")
     return util:eval($xquery)
