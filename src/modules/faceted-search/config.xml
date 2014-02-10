@@ -1,9 +1,9 @@
 <config type="module">
     <module key="faceted-search">
-        <param key="kwic.hits">3</param>
+        <param key="kwic-hits">3</param>
         <param key="thumbnail">true</param>
-        <param key="hitsPerPage">10</param>
-        <param key="queryRoot">
+        <param key="hits-per-page">10</param>
+        <param key="query-root">
             <xpath>tei:TEI</xpath>
         </param>
         <param key="facets">

@@ -14,7 +14,7 @@ function fsearch:results($node as node(), $model as map(*)) as map()* {
     let $page := xs:integer(request:get-parameter("page", "1"))
 
     let $target := config:param-value($model, "data-dir")
-    let $hits := local:getHits($model, $target)
+    let $hits := local:get-hits($model, $target)
 
     let $hitsordered :=
         for $hit in $hits
@@ -22,7 +22,7 @@ function fsearch:results($node as node(), $model as map(*)) as map()* {
         return
            $hit
     
-    let $num :=  xs:integer(config:module-param-value($model, "faceted-search",  "hitsPerPage"))     
+    let $num :=  xs:integer(config:module-param-value($model, "faceted-search",  "hits-per-page"))     
     let $pages := ceiling(count($hits) div $num)
     let $start := $page * $num - $num + 1
     
@@ -52,7 +52,7 @@ function fsearch:hitstart($node as node(), $model as map(*)) {
 declare 
     %templates:wrap
 function fsearch:hitend($node as node(), $model as map(*)) {
-    let $num := xs:integer(config:module-param-value($model, "faceted-search",  "hitsPerPage"))  
+    let $num := xs:integer(config:module-param-value($model, "faceted-search",  "hits-per-page"))  
     let $res := $model("start") + $num - 1
     return if($res > $model("totalhits")) 
         then $model("totalhits")
@@ -72,7 +72,7 @@ function fsearch:pages($node as node(), $model as map(*)) {
 };
 
 (: TODO: title-xpath should be configurable :)
-declare function fsearch:resultTitle($node as node(), $model as map(*)) {
+declare function fsearch:result-title($node as node(), $model as map(*)) {
     let $relloc := "/xml/data/" || util:document-name($model("hit"))
     let $absloc := config:param-value($model, "data-dir") || $relloc
     let $viewdoc := config:module-param-value($model,'faceted-search','viewer.html')
@@ -83,7 +83,7 @@ declare function fsearch:resultTitle($node as node(), $model as map(*)) {
         </a>
 };
 
-declare function fsearch:resultImg($node as node(), $model as map(*)) {
+declare function fsearch:result-img($node as node(), $model as map(*)) {
     (:  TODO: could better be done in template, than by param :)
     if(xs:boolean(config:module-param-value($model, "faceted-search", "thumbnail"))) then
         (: TODO image-xpath should be configured by conf.xml:)
@@ -97,20 +97,20 @@ declare function fsearch:resultImg($node as node(), $model as map(*)) {
             ()
 };
 
-declare function fsearch:resultKwic($node as node(), $model as map(*)) {
+declare function fsearch:result-kwic($node as node(), $model as map(*)) {
 
     let $hit := $model("hit")
     let $expanded := kwic:expand($hit)
     order by ft:score($hit) descending
     return
-        for $i in 1 to xs:integer(config:param-value($model, "kwic.hits"))
+        for $i in 1 to xs:integer(config:param-value($model, "kwic-hits"))
         return
             if(($expanded//exist:match)[$i]) then
                 kwic:get-summary($expanded, ($expanded//exist:match)[$i], <config width="40"/>)
             else ()
 };
 
-declare function fsearch:resultSource($node as node(), $model as map(*)) {
+declare function fsearch:result-source($node as node(), $model as map(*)) {
 
     let $docloc := config:param-value($model, "data-dir") || "/xml/data/" || util:document-name($model("hit"))
     return 
@@ -119,7 +119,7 @@ declare function fsearch:resultSource($node as node(), $model as map(*)) {
 
 declare 
 (:    %templates:wrap:)
-function fsearch:resultId($node as node(), $model as map(*)) {
+function fsearch:result-id($node as node(), $model as map(*)) {
     element { node-name($node) } { attribute name { util:document-name($model("hit")) }, $node/@*, $node/* }
 };
 
@@ -132,12 +132,12 @@ declare function fsearch:facets($model as map(*), $hits) as map() {
     )
 };
 
-declare function fsearch:listFacets($node as node(), $model as map(*)) as map(*){
+declare function fsearch:list-facets($node as node(), $model as map(*)) as map(*){
     map { "facetgroups" := $model("facet") }
 };
 
 declare 
-function fsearch:facetTitle($node as node(), $model as map(*)) {
+function fsearch:facet-title($node as node(), $model as map(*)) {
     <li>{map:keys($model("facet"))}</li>
 };
 
@@ -155,7 +155,7 @@ declare function fsearch:facet($node as node(), $model as map(*)) as item()* {
 declare function local:facet($model as map(*), $hits as node()*, $key as xs:string, $types as xs:string*) as node()* {
     
     let $query := request:get-parameter("q", ())
-    let $facetReq := local:facetQueryFromRequest()
+    let $facetReq := local:facet-query-from-request()
     
     (: the link to the html page displaying this module :)
     let $search-html := config:param-value($model,'exist-resource')
@@ -201,7 +201,7 @@ declare function local:deselected-for-key($model, $key as xs:string) {
     (: the link to the html page displaying this module :)
     let $search-html := config:param-value($model,'exist-resource')
     
-    let $facetReq := local:facetQueryFromRequest()
+    let $facetReq := local:facet-query-from-request()
     
     for $fparts in tokenize($facetReq, ",")
         let $parts := tokenize($fparts, ":")
@@ -219,26 +219,26 @@ declare function local:deselected-for-key($model, $key as xs:string) {
             else ()
 };
 
-declare function local:getHits($model as map(*), $target as xs:string) as node()*{
+declare function local:get-hits($model as map(*), $target as xs:string) as node()*{
     
     let $query := request:get-parameter("q", ())
-    let $fxquery := local:constructFacetQuery($model)
+    let $fxquery := local:construct-facet-query($model)
  
-    let $xqueries :=  for $queryRoot in $model("config")//module[@key="faceted-search"]/param[@key="queryRoot"]//xpath
+    let $xqueries :=  for $query-root in $model("config")//module[@key="faceted-search"]/param[@key="query-root"]//xpath
         return 
             if($query) then
-                "collection($target)//" || $queryRoot || $fxquery || "[ft:query(., $query)]"
+                "collection($target)//" || $query-root || $fxquery || "[ft:query(., $query)]"
             else
-                "collection($target)//" || $queryRoot || $fxquery
+                "collection($target)//" || $query-root || $fxquery
  
     let $xquery := string-join($xqueries, " | ")
     return util:eval($xquery)
     
 };
 
-declare function local:constructFacetQuery($model as map(*)) as xs:string {
+declare function local:construct-facet-query($model as map(*)) as xs:string {
 
-    let $facet := local:facetQueryFromRequest()
+    let $facet := local:facet-query-from-request()
     let $fxquery := 
         if ($facet) then
             for $fquery in tokenize($facet, ",")
@@ -267,7 +267,7 @@ declare function local:constructFacetQuery($model as map(*)) as xs:string {
 };
 
 (: we need the facet uri encoded, so request-get parameter does not work :)
-declare function local:facetQueryFromRequest() {
+declare function local:facet-query-from-request() {
     (: remove trailing questionary mark :)
     let $querystring := substring(request:get-query-string(),1)
     (: tokenize at ampersand :)
@@ -282,9 +282,7 @@ declare function local:facetQueryFromRequest() {
 
 declare function local:facetSelected($key as xs:string, $value as xs:string) as xs:boolean {
     
-    
-(:    let $r := for $token in tokenize("dates:1977,keywords:prose", ","):)
-    let $r := for $token in tokenize(local:facetQueryFromRequest(), ",")
+    let $r := for $token in tokenize(local:facet-query-from-request(), ",")
         let $parts := tokenize($token, ":")
                 return if($parts[1]=$key and xmldb:decode($parts[2])=$value)
                     then true()
