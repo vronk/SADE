@@ -24,7 +24,10 @@
     <property name="markdown.dest" value="${build.dir}/exist-markdown"/>
 
     <property name="sade.tgz.file" value="${build.dir}/sade.tar.gz"/>
+    <property name="tgsade.tgz.file" value="${build.dir}/sade-textgrid.tar.gz"/>
 
+    <property name="tg.defp.dest" value="${build.dir}/sade-textgrid-default-project"/>
+    <property name="tg.sadeconnect.dest" value="${build.dir}/textgrid-sade-connector"/>
 
     <target name="build" depends="exist-git,markdown">
         <echo message="building eXist"/>
@@ -51,6 +54,7 @@
         <symlink link="${exist.dist}/bin/sade.bat" resource="../tools/wrapper/bin/exist.bat"/-->
 
         <antcall target="tgz" />
+        <antcall target="textgrid-tgz" />
 
     </target>
 
@@ -87,6 +91,66 @@
                 <exclude name="sade/src/**" /-->
             </tarfileset>
         </tar>
+    </target>
+
+    <target name="textgrid-tgz" depends="textgrid-default-project,textgrid-sade-connector">
+        <delete file="${tgsade.tgz.file}" />
+        <!--delete dir="${build.dir}/sade" /-->
+        <!--move file="${exist.dist}" toFile="${build.dir}/sade" /-->
+        <move file="${tg.sadeconnect.dest}/build/textgrid-connect-0.1.xar" toFile="${build.dir}/sade/autodeploy/textgrid-connect-0.1.xar" />
+        <move file="${tg.defp.dest}/build/sade-textgrid-default-project.xar" toFile="${build.dir}/sade/autodeploy/sade-textgrid-default-project.xar" />
+        <tar destfile="${tgsade.tgz.file}" compression="gzip" longfile="gnu">
+            <tarfileset dir="${build.dir}" filemode="755">
+                <include name="sade/**/*.sh"/>
+                <include name="sade/tools/wrapper/bin/**"/>
+            </tarfileset>
+            <tarfileset dir="${build.dir}" includes="sade/**">
+                <exclude name="sade/**/*.sh"/>
+                <exclude name="sade/tools/wrapper/bin/**" />
+                <!--exclude name="sade/extensions/**" />
+                <exclude name="sade/src/**" /-->
+            </tarfileset>
+        </tar>
+    </target>
+
+    <target name="textgrid-default-project" depends="ant-dependencies">
+        <if>
+          <available file="${tg.defp.dest}" type="dir" />
+          <then>
+            <echo message="updating tg-default-project git repository" />
+            <git:git directory="${tg.defp.dest}" verbose="false">
+                 <git:pull />
+            </git:git>
+          </then>
+          <else>
+            <echo message="cloning https://github.com/ubbo/sade-textgrid-default-project.git"/>
+            <git:git directory="${tg.defp.dest}" verbose="false">
+                 <git:clone uri="https://github.com/ubbo/sade-textgrid-default-project.git"/>
+            </git:git>
+          </else>
+        </if>
+        <echo message="packaging sade-textgrid-default-project.xar"/>
+        <ant antfile="${tg.defp.dest}/build.xml" inheritAll="false" />         
+    </target>
+
+    <target name="textgrid-sade-connector" depends="ant-dependencies">
+        <if>
+          <available file="${tg.sadeconnect.dest}" type="dir" />
+          <then>
+            <echo message="updating tg-sade-connector git repository" />
+            <git:git directory="${tg.sadeconnect.dest}" verbose="false">
+                 <git:pull />
+            </git:git>
+          </then>
+          <else>
+            <echo message="cloning https://github.com/ubbo/textgrid-sade-connector.git"/>
+            <git:git directory="${tg.sadeconnect.dest}" verbose="false">
+                 <git:clone uri="https://github.com/ubbo/textgrid-sade-connector.git"/>
+            </git:git>
+          </else>
+        </if>
+        <echo message="packaging textgrid-sade-connector.xar"/>
+        <ant antfile="${tg.sadeconnect.dest}/build.xml" inheritAll="false" />         
     </target>
 
     <target name="markdown" depends="ant-dependencies">
