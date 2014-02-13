@@ -59,6 +59,8 @@
     </target>
 
     <target name="existBuild">
+       <!-- get updated xars to autodeploy dir -->
+       <delete dir="${exist.dest}/autodeploy" />
        <java classname="org.apache.tools.ant.launch.Launcher" fork="true">
          <arg value="-Dant.home=${exist.dest}/tools/ant"/>
          <arg value="-Dant.library.dir=${exist.dest}/tools/ant/lib"/>
