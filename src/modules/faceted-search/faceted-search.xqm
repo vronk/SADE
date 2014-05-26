@@ -87,17 +87,36 @@ function fsearch:pages($node as node(), $model as map(*)) {
 };
 
 declare function fsearch:result-title($node as node(), $model as map(*)) {
-    let $relloc := "/xml/data/" || util:document-name($model("hit"))
-    let $absloc := config:param-value($model, "data-dir") || $relloc
     let $viewdoc := config:module-param-value($model,'faceted-search','viewer-html')
  
     return 
-        <a href="{$viewdoc}{$relloc}">
+        <a href="{$viewdoc}{util:document-name($model("hit"))}">
             {
                 for $titleQuery in $model("config")//module[@key="faceted-search"]/param[@key="result-title"]//xpath
                 return util:eval("($model('hit')" || $titleQuery || ")[1]")
             }
         </a>
+};
+
+declare function fsearch:result-xslt($node as node(), $model as map(*)) {
+
+    let $docname := util:document-name($model("hit"))
+    let $id := substring-before($docname, ".")
+    let $link := config:module-param-value($model,'faceted-search','viewer-html') || $docname
+    let $xslt := config:module-param-value($model,'faceted-search','result-xslt')
+    
+    return 
+        transform:transform($model("hit"), $xslt, 
+            <parameters>
+                <param name="id" value="{$id}"/>
+                <param name="link" value="{$link}"/>                
+            </parameters>
+        )
+    
+};
+
+declare function fsearch:result-score($node as node(), $model as map(*)) {
+    ft:score($model('hit'))
 };
 
 declare function fsearch:result-img($node as node(), $model as map(*)) {
