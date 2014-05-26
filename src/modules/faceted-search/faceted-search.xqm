@@ -209,7 +209,13 @@ declare function local:facet($model as map(*), $hits as node()*, $key as xs:stri
 
     (: normalize strings :)
     let $unnormal := for $x in util:eval($fquery)
-        return <un>{normalize-space($x)}</un>
+        return
+            (:let $norms := normalize-space($x):)
+            let $norms := xs:string($x)
+            return if (string-length($norms) >= 1) then
+                <un>{$norms}</un>
+            else
+                ()
     
     let $deselected := local:deselected-for-key($model, $key)
         
@@ -297,8 +303,9 @@ declare function local:construct-facet-query($model as map(*)) as xs:string {
                         let $val := replace($val, "!", "")
                         
                         return if(starts-with($xpath, ".") or starts-with($xpath, "/"))
-                            then $xpath || $op || "'" || $val || "'" 
-                            else ".//" || $xpath || $op || "'" || $val || "'" 
+                            (: to escpae quotes, you have to double them :)
+                            then $xpath || $op || """" || $val || """" 
+                            else ".//" || $xpath || $op || """" || $val || """" 
                             
                 return 
                     if(not(empty($select))) then "[" || string-join($select, " or ") || "]"
