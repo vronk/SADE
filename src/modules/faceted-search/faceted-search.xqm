@@ -181,10 +181,13 @@ function fsearch:facet-title($node as node(), $model as map(*)) {
 declare function fsearch:facet($node as node(), $model as map(*)) as item()* {
 
     for $facet in $model("config")//module[@key="faceted-search"]//facet
-        return
+        (: hide facet-categories with less than one entry :)
+        return if (count($model("facets")(xs:string($facet/@key))) > 0) then
             <li><strong>{xs:string($facet/@title)}</strong>
                 <ul class="hideMore">{local:deselected-for-key($model, xs:string($facet/@key))}{$model("facets")(xs:string($facet/@key))}</ul>
             </li>
+        else
+            ()
                 
 };
 
