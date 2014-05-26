@@ -28,13 +28,13 @@ function fsearch:results($node as node(), $model as map(*)) as map()* {
 (:        if order by util:eval($order-by) descending:)
 (:        return:)
 (:           $hit:)
-        if(request:get-parameter("order", "ascending") = "ascending") then
+        if(request:get-parameter("order", "descending") = "descending") then
                 for $hit in $hits
-                order by util:eval($order-by) ascending
+                order by util:eval($order-by) descending
                 return $hit
             else
                 for $hit in $hits
-                order by util:eval($order-by) descending
+                order by util:eval($order-by) ascending
                 return $hit 
     
     let $num :=  xs:integer(config:module-param-value($model, "faceted-search",  "hits-per-page"))     
