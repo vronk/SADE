@@ -16,18 +16,10 @@ function fsearch:results($node as node(), $model as map(*)) as map()* {
     let $target := config:param-value($model, "data-dir")
     let $hits := local:get-hits($model, $target)
 
-(:    let $order-by := "$hit//tei:title[@type='main'][1]/text(), $hit//bol:a0":)
-
     let $obreq := request:get-parameter("order-by", "relevance")
     let $order-by := string-join($model("config")//module[@key="faceted-search"]//order[@key = $obreq]//xpath , ",")
-(:    let $order := if(request:get-parameter("order", "ascending") = "ascending"):)
 
     let $hitsordered :=
-        
-(:(:        order by ft:score($hit) descending:):)
-(:        if order by util:eval($order-by) descending:)
-(:        return:)
-(:           $hit:)
         if(request:get-parameter("order", "descending") = "descending") then
                 for $hit in $hits
                 order by util:eval($order-by) descending
@@ -106,7 +98,7 @@ declare function fsearch:result-xslt($node as node(), $model as map(*)) {
     let $xslt := config:module-param-value($model,'faceted-search','result-xslt')
     
     return 
-        transform:transform($model("hit"), $xslt, 
+        transform:transform($model("hit"), doc($xslt), 
             <parameters>
                 <param name="id" value="{$id}"/>
                 <param name="link" value="{$link}"/>                
