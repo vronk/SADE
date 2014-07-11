@@ -71,4 +71,25 @@ function nav:subitemchoice($node as node(), $model as map(*)) {
 
 };
 
+declare function nav:edit($node as node(), $model as map(*)) {
+let $new := request:get-parameter("new", "0")
+return
+    if (string($new) eq '0')
+    then
+        <div>
+            <form class="form-horizontal" action="edit.html" method="GET">
+                <textarea class="form-control" rows="10" name="new" />
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+            <pre>{serialize(doc('/sade-projects/' || config:param-value($model, "project-id") || '/navigation.xml'))}</pre>
+        </div>
+    else 
+        let $item := xmldb:login('/sade-projects/' || config:param-value($model, "project-id"), config:param-value($model, "sade.user"), config:param-value($model, "sade.password")),
+            $egal := xmldb:store('/sade-projects/' || config:param-value($model, "project-id"), 'navigation.xml', $new, "text/xml")
+        return
+        <div><pre>{serialize(doc('/sade-projects/' || config:param-value($model, "project-id") || '/navigation.xml'))}</pre></div>
+};
 
+declare function nav:textgrid($node as node(), $model as map(*)) {
+doc('/sade-projects/' || config:param-value($model, "project-id") || '/navigation-'|| config:param-value($model, "template") ||'.xml')
+};
