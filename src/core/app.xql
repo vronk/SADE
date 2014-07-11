@@ -1,7 +1,6 @@
 xquery version "3.0";
 
 module namespace app="http://sade/app";
-import module namespace console="http://exist-db.org/xquery/console";
 import module namespace templates="http://exist-db.org/xquery/templates" at "templates.xql";
 import module namespace config="http://exist-db.org/xquery/apps/config" at "config.xqm";
 import module namespace config-params="http://exist-db.org/xquery/apps/config-params" at "config.xql";
