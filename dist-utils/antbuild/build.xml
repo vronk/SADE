@@ -18,7 +18,7 @@
 <!--    <property name="exist.branch" value="00db4c3d9538337b705f7f30c98ba4a54bf05227" /> -->
 
     <property name="exist.dest" value="${build.dir}/exist-git"/> 
-    <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.1"/> 
+    <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.2"/> 
     <property name="sade.src" value="../../"/> 
     <property name="markdown.git" value="https://github.com/wolfgangmm/exist-markdown.git"/>
     <property name="markdown.dest" value="${build.dir}/exist-markdown"/>
