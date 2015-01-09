@@ -195,7 +195,7 @@
             <git:git directory="${exist.dest}" verbose="false">
                  <git:clone uri="${exist.git}"/>
                  <!-- <git:checkout branchName="${exist.branch}" /> -->
-                 <git:checkout tagName="${exist.tag}" />
+                 <git:checkout branchName="${exist.tag}" />
             </git:git>
 
           </else>
