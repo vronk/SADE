@@ -14,7 +14,7 @@
     <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
 
     <property name="exist.git" value="https://github.com/eXist-db/exist.git"/>
-    <property name="exist.branch" value="develop"/>
+    <property name="exist.tag" value="eXist-2.2"/>
 <!--    <property name="exist.branch" value="00db4c3d9538337b705f7f30c98ba4a54bf05227" /> -->
 
     <property name="exist.dest" value="${build.dir}/exist-git"/> 
