@@ -186,7 +186,7 @@
                  <!-- <git:checkout branchName="${exist.branch}" /> -->
                  <git:checkout branchName="${exist.tag}" />
                  <!-- todo: pull does not (and does not need to) work with detached branch -->
-                 <git:pull />
+                 <!-- <git:pull /> -->
             </git:git>
           </then>
 
