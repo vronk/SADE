@@ -184,7 +184,7 @@
             <echo message="updating exist git repository" />
             <git:git directory="${exist.dest}" verbose="false">
                  <!-- <git:checkout branchName="${exist.branch}" /> -->
-                 <git:checkout tagName="${exist.tag}" />
+                 <git:checkout branchName="${exist.tag}" />
                  <!-- todo: pull does not (and does not need to) work with detached branch -->
                  <git:pull />
             </git:git>
