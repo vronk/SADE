@@ -38,7 +38,12 @@
         <antcall target="existBuild"/>
 
         <!-- include cqlparser in conf.xml -->
-        <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" ignorewhitespace="true" failonerror="true" />
+        <replace file="${exist.dist}/conf.xml">
+                <replacetoken>&lt;module uri="http://exist-db.org/xquery/cqlparser"           class="org.exist.xquery.modules.cqlparser.CQLParserModule" /&gt;</replacetoken>
+                <replacevalue>--&gt; &lt;module uri="http://exist-db.org/xquery/cqlparser"           class="org.exist.xquery.modules.cqlparser.CQLParserModule" /&gt; &lt;!--</replacevalue>
+        </replace>
+        <!-- former patch, now replaced <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" ignorewhitespace="true" failonerror="true" /> -->
+
 
         <echo message="building and integrating SADE"/>
         <ant antfile="${sade.src}/build.xml" inheritAll="false" />
