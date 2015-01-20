@@ -38,7 +38,7 @@
         <antcall target="existBuild"/>
 
         <!-- include cqlparser in conf.xml -->
-        <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" ignorewhitespace="1" />
+        <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" ignorewhitespace="true" failonerror="true" />
 
         <echo message="building and integrating SADE"/>
         <ant antfile="${sade.src}/build.xml" inheritAll="false" />
