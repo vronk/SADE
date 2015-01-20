@@ -1,5 +1,5 @@
---- conf.xml.tmp	2015-01-20 12:49:16.109407057 +0100
-+++ conf.xml	2015-01-20 13:08:35.282617999 +0100
+--- conf.xml.tmpl	2015-01-20 13:37:32.076323654 +0100
++++ conf.xml	2015-01-20 13:42:52.155281285 +0100
 @@ -898,7 +898,9 @@
              <module uri="http://exist-db.org/xquery/cssparser" class="org.exist.xquery.modules.cssparser.CSSParserModule"/>
              <module uri="http://exist-db.org/xquery/backups"            class="org.exist.backup.xquery.BackupModule" />
