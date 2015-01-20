@@ -1,4 +1,4 @@
---- build/exist-git/dist/eXist-db-2.2/conf.xml.tmp	2015-01-20 12:49:16.109407057 +0100
+--- build/exist-git/dist/eXist-db-2.2/conf.xml.tmpl	2015-01-20 12:49:16.109407057 +0100
 +++ build/exist-git/dist/eXist-db-2.2/conf.xml	2015-01-20 12:49:41.245953113 +0100
 @@ -897,9 +897,9 @@
              <!--
