@@ -1,14 +1,12 @@
---- build/exist-git/dist/eXist-db-2.2/conf.xml.tmpl	2015-01-20 12:49:16.109407057 +0100
-+++ build/exist-git/dist/eXist-db-2.2/conf.xml	2015-01-20 12:49:41.245953113 +0100
-@@ -897,9 +897,9 @@
-             <!--
+--- conf.xml.tmp	2015-01-20 12:49:16.109407057 +0100
++++ conf.xml	2015-01-20 13:08:35.282617999 +0100
+@@ -898,7 +898,9 @@
              <module uri="http://exist-db.org/xquery/cssparser" class="org.exist.xquery.modules.cssparser.CSSParserModule"/>
              <module uri="http://exist-db.org/xquery/backups"            class="org.exist.backup.xquery.BackupModule" />
--            <module uri="http://exist-db.org/xquery/cache"              class="org.exist.xquery.modules.cache.CacheModule" />
-+            <module uri="http://exist-db.org/xquery/cache"              class="org.exist.xquery.modules.cache.CacheModule" />-->
+             <module uri="http://exist-db.org/xquery/cache"              class="org.exist.xquery.modules.cache.CacheModule" />
++-->
              <module uri="http://exist-db.org/xquery/cqlparser"           class="org.exist.xquery.modules.cqlparser.CQLParserModule" />
--            <module uri="http://exist-db.org/xquery/exi"                class="org.exist.xquery.modules.exi.ExiModule" />
-+<!--            <module uri="http://exist-db.org/xquery/exi"                class="org.exist.xquery.modules.exi.ExiModule" />
++<!--
+             <module uri="http://exist-db.org/xquery/exi"                class="org.exist.xquery.modules.exi.ExiModule" />
              <module uri="http://exist-db.org/xquery/jfreechart"         class="org.exist.xquery.modules.jfreechart.JFreeChartModule" /> 
              <module uri="http://exist-db.org/xquery/memcached"          class="org.exist.xquery.modules.memcached.MemcachedModule" />
-             <module uri="http://exist-db.org/xquery/oracle"             class="org.exist.xquery.modules.oracle.OracleModule" />
