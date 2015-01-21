@@ -133,6 +133,7 @@
             <echo message="cloning https://github.com/ubbo/sade-textgrid-default-project.git"/>
             <git:git directory="${tg.defp.dest}" verbose="false">
                  <git:clone uri="https://github.com/ubbo/sade-textgrid-default-project.git"/>
+                  <git:checkout branchName="tmpl1" />
             </git:git>
           </else>
         </if>
