@@ -121,7 +121,7 @@
     </target>
 
     <target name="textgrid-default-project" depends="ant-dependencies">
-        <if>
+       <!--  <if>
           <available file="${tg.defp.dest}" type="dir" />
           <then>
             <echo message="updating tg-default-project git repository" />
@@ -129,14 +129,14 @@
                  <git:pull />
             </git:git>
           </then>
-          <else>
+          <else> -->
             <echo message="cloning https://github.com/ubbo/sade-textgrid-default-project.git"/>
             <git:git directory="${tg.defp.dest}" verbose="false">
                  <git:clone uri="https://github.com/ubbo/sade-textgrid-default-project.git"/>
                   <git:checkout branchName="tmpl1" />
             </git:git>
-          </else>
-        </if>
+       <!--   </else>
+        </if> -->
         <echo message="packaging sade-textgrid-default-project.xar"/>
         <ant antfile="${tg.defp.dest}/build.xml" inheritAll="false" />         
     </target>
