@@ -61,7 +61,13 @@ declare function mviewer:renderTILE($node as node(), $model as map(*), $docpath 
         <!-- TODO: Get Session ID from tgclient instead of $sid in this function -->
             {for $i in $doc//tei:link[starts-with(@targets, '#shape')]
                 let $shape := substring-before(substring-after($i/@targets, '#'), ' '),
-                    $teiuri := substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a'),
+                    $teiuri := 
+                                if(contains(substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a'), '.'))
+                                then substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a')
+                                else 
+                                    (: todo: find lates revision in collection :)
+                                    substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a') || '.0',
+                    
                     $imageuri := $doc//svg:image[following::svg:rect/@id eq $shape]/string(@xlink:href),
                     $offset := '&amp;wx=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@x), '%')) div 100 || '&amp;wy=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@y), '%')) div 100,
                     $range := '&amp;ww=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@width), '%')) div 100 || '&amp;wh=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@height), '%')) div 100
