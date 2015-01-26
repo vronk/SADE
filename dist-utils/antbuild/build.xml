@@ -121,13 +121,14 @@
     </target>
 
     <target name="textgrid-default-project" depends="ant-dependencies">
+    <delete dir="${tg.defp.dest}"/>
         <if>
           <available file="${tg.defp.dest}" type="dir" />
           <then>
             <echo message="updating tg-default-project git repository" />
             <git:git directory="${tg.defp.dest}" verbose="false">
-                <git:fetch />
-                <git:checkout branchName="tmpl1" />
+                <git:pull />
+            <!--     <git:checkout branchName="tmpl1" /> -->
             </git:git>
           </then>
           <else> 
