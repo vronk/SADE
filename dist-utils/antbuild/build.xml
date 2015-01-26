@@ -126,7 +126,7 @@
           <then>
             <echo message="updating tg-default-project git repository" />
             <git:git directory="${tg.defp.dest}" verbose="false">
-                <git:pull />
+                <git:fetch />
                 <git:checkout branchName="tmpl1" />
             </git:git>
           </then>
