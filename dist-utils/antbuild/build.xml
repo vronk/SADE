@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project
-    basedir="." 
-    default="build" 
+    basedir="."
+    default="build"
     name="SADE"
     xmlns:ivy="antlib:org.apache.ivy.ant"
     xmlns:git="antlib:com.rimerosolutions.ant.git">
@@ -17,9 +17,9 @@
     <property name="exist.tag" value="eXist-2.2"/>
 <!--    <property name="exist.branch" value="00db4c3d9538337b705f7f30c98ba4a54bf05227" /> -->
 
-    <property name="exist.dest" value="${build.dir}/exist-git"/> 
-    <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.2"/> 
-    <property name="sade.src" value="../../"/> 
+    <property name="exist.dest" value="${build.dir}/exist-git"/>
+    <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.2"/>
+    <property name="sade.src" value="../../"/>
     <property name="markdown.git" value="https://github.com/wolfgangmm/exist-markdown.git"/>
     <property name="markdown.dest" value="${build.dir}/exist-markdown"/>
 
@@ -121,26 +121,22 @@
     </target>
 
     <target name="textgrid-default-project" depends="ant-dependencies">
-    <delete dir="${tg.defp.dest}"/>
-       <!-- <if>
-          <available file="${tg.defp.dest}" type="dir" />
-          <then>
-            <echo message="updating tg-default-project git repository" />
-            <git:git directory="${tg.defp.dest}" verbose="false">
-                <git:pull />
-            <!-/-     <git:checkout branchName="tmpl1" /> -/->
-            </git:git>
-          </then>
-          <else> -->
-            <echo message="cloning https://github.com/ubbo/sade-textgrid-default-project.git"/>
-            <git:git directory="${tg.defp.dest}" verbose="false">
-                 <git:clone uri="https://github.com/ubbo/sade-textgrid-default-project.git"/>
-                  <git:checkout branchName="tmpl1" />
-            </git:git>
-    <!--     </else>
-        </if> -->
-        <echo message="packaging sade-textgrid-default-project.xar"/>
-        <ant antfile="${tg.defp.dest}/build.xml" inheritAll="false" />         
+        <if>
+            <available file="${tg.defp.dest}" type="dir" />
+            <then>
+                <delete dir="${tg.defp.dest}"/>
+            </then>
+        </if>
+
+        <echo message="cloning https://github.com/ubbo/sade-textgrid-default-project.git" />
+        <git:git directory="${tg.defp.dest}" verbose="false">
+            <git:clone uri="https://github.com/ubbo/sade-textgrid-default-project.git" />
+            <git:fetch />
+            <git:checkout branchName="tmpl1" />
+        </git:git>
+
+        <echo message="packaging sade-textgrid-default-project.xar" />
+        <ant antfile="${tg.defp.dest}/build.xml" inheritAll="false" />
     </target>
 
     <target name="textgrid-sade-connector" depends="ant-dependencies">
@@ -160,7 +156,7 @@
           </else>
         </if>
         <echo message="packaging textgrid-sade-connector.xar"/>
-        <ant antfile="${tg.sadeconnect.dest}/build.xml" inheritAll="false" />         
+        <ant antfile="${tg.sadeconnect.dest}/build.xml" inheritAll="false" />
     </target>
 
     <target name="markdown" depends="ant-dependencies">
@@ -180,7 +176,7 @@
           </else>
         </if>
         <echo message="packaging markdown.xar"/>
-        <ant antfile="${markdown.dest}/build.xml" inheritAll="false" />      
+        <ant antfile="${markdown.dest}/build.xml" inheritAll="false" />
     </target>
 
     <target name="exist-git" depends="ant-dependencies">
@@ -238,6 +234,6 @@
     	</path>
     	<taskdef resource="org/apache/ivy/ant/antlib.xml"
     	          uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
-    </target>  
+    </target>
 
 </project>
