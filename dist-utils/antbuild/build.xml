@@ -33,6 +33,9 @@
    <target name="build" depends="exist-git">
         <echo message="building eXist"/>
 
+        <!-- add some more xar packages to autodeploy --> 
+        <copy file="${resources.dir}/local.build.properties" tofile="${exist.dest}/local.build.properties" />
+        
         <!-- include cqlparser in build-->
         <copy file="${resources.dir}/exist.extension.properties.override" tofile="${exist.dest}/extensions/local.build.properties" />
 
