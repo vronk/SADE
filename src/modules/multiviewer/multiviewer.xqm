@@ -24,6 +24,8 @@ declare function mviewer:show($node as node(), $model as map(*), $id as xs:strin
                 mviewer:renderXml($node, $model, $docpath)
             case "md"
                 return mviewer:renderMarkdown($node, $model, $docpath)
+            case "html"
+                return doc($docpath)
             default
                 return mviewer:renderXml($node, $model, $docpath)
 };
