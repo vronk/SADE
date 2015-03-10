@@ -34,7 +34,7 @@
         <echo message="building eXist"/>
 
         <!-- add some more xar packages to autodeploy --> 
-        <copy file="${resources.dir}/local.build.properties.override" tofile="${exist.dest}/local.build.properties" />
+        <copy file="${resources.dir}/local.build.properties.override" tofile="${exist.dest}/build.properties" />
         
         <!-- include cqlparser in build-->
         <copy file="${resources.dir}/exist.extension.properties.override" tofile="${exist.dest}/extensions/local.build.properties" />
