@@ -3,6 +3,5 @@
     version="@app.version@" spec="1.0">
     <title>@app.name@</title>
     <dependency package="http://exist-db.org/apps/markdown"/>
-    <dependency package="http://www.functx.com"/>
     <dependency package="http://exist-db.org/apps/monex"/>
 </package>
