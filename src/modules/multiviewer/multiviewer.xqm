@@ -48,10 +48,8 @@ declare function mviewer:renderXml($node as node(), $model as map(*), $docpath a
     let $doc := mviewer:tei-paging($doc, $page)
     let $html := mviewer:choose-xsl-and-transform($doc, $model)
     
-    return if(local-name($html[1]) = "html") then
-            <div class="teiXsltView">{$html/xhtml:body/*}</div>
-        else
-            <div class="teiXsltView">{$html}</div>
+    return 
+        <div class="teiXsltView">{if(local-name($html[1]) = "html") then $html/xhtml:body/* else $html}</div>
 };
 
 declare function mviewer:renderTILE($node as node(), $model as map(*), $docpath as xs:string) as item()* {
