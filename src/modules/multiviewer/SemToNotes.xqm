@@ -16,7 +16,10 @@ declare function dsk-view:coordinatesPolygon($shape as element(svg:polygon), $tg
   let $image := $tgl//svg:image
   let $width := xs:integer($image/@width/string())
   let $height := xs:integer($image/@height/string())
-  let $percentage := 1500 div $width
+  let $percentage := if($height > $width ) then
+        1500 div $height
+    else
+        1500 div $width
 
   let $string := $shape/@points/string()
   let $pointss := tokenize($string, ' ')
@@ -42,7 +45,10 @@ declare function dsk-view:coordinatesRect($shape as element(svg:rect), $tgl) as 
   let $image := $tgl//svg:image
   let $width := xs:integer($image/@width/string())
   let $height := xs:integer($image/@height/string())
-  let $percentage := 1500 div $width
+  let $percentage := if($height > $width ) then
+        1500 div $height
+    else
+        1500 div $width  
 
   let $xs := substring-before($shape/@x/string(), '%')
   let $ys := substring-before($shape/@y/string(), '%')
@@ -231,7 +237,7 @@ return
           </div>
         </div>
         <div class="content">
-          <img id="img" src="/exist/apps/textgrid-connect/digilib/{substring-after(substring-before($tilepath, '/data'), 'sade-projects/')}/{$imguri}?dw=1500"/>
+          <img id="img" src="/exist/apps/textgrid-connect/digilib/{substring-after(substring-before($tilepath, '/data'), 'sade-projects/')}/{$imguri}?dh=1500&amp;dw=1500"/>
         </div>
       </div>
       { $resizable }
