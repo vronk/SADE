@@ -8,7 +8,10 @@ declare namespace xlink="http://www.w3.org/1999/xlink";
 
 import module namespace config="http://exist-db.org/xquery/apps/config" at "../../core/config.xqm";
 import module namespace md="http://exist-db.org/xquery/markdown" at "/apps/markdown/content/markdown.xql";
+import module namespace dsk-view="http://semtonotes.github.io/SemToNotes/dsk-view"
+  at './SemToNotes.xqm';
 
+(:import module namespace console="http://exist-db.org/xquery/console";:)
 
 declare function mviewer:show($node as node(), $model as map(*), $id as xs:string) as item()* {
 
@@ -44,15 +47,36 @@ declare function mviewer:renderXml($node as node(), $model as map(*), $docpath a
     let $doc := doc($docpath)
     
     (:todo: if tei :)
-    let $page := xs:integer(request:get-parameter("page", -1))
-    let $doc := mviewer:tei-paging($doc, $page)
+(:    let $page := xs:integer(request:get-parameter("page", -1)):)
+(:    let $doc := mviewer:tei-paging($doc, $page):)
     let $html := mviewer:choose-xsl-and-transform($doc, $model)
     
-    return 
-        <div class="teiXsltView">{if(local-name($html[1]) = "html") then $html/xhtml:body/* else $html}</div>
+    return if(local-name($html[1]) = "html") then
+            <div class="teiXsltView">{$html/xhtml:body/*}</div>
+        else
+            <div class="teiXsltView">{$html}</div>
+};
+declare function mviewer:renderTILE($node as node(), $model as map(*), $docpath as xs:string) as item()* {
+let $doc := doc($docpath)
+let $i := $doc//tei:link[starts-with(@targets, '#shape')][1]
+let $shape := substring-before(substring-after($i/@targets, '#'), ' ')
+let $teiuri :=  if(contains(substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a'), '.'))
+                                then substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a')
+                                else 
+                                    (: todo: find lates revision in collection :)
+                                    substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a') || '.0'
+let $imageuri := $doc//svg:image[following::svg:rect/@id eq $shape]/string(@xlink:href),
+    $imgwidth := $doc//svg:image/@width/number()
+
+let $teidoc := doc(substring-before($docpath, 'tile') || 'data/' || $teiuri || '.xml')/*
+let $html := dsk-view:render($teidoc, $imageuri, $imgwidth, $docpath)//xhtml:body/*
+
+return <div id="stn">
+   {$html}
+    </div>
 };
 
-declare function mviewer:renderTILE($node as node(), $model as map(*), $docpath as xs:string) as item()* {
+declare function mviewer:renderTILEold($node as node(), $model as map(*), $docpath as xs:string) as item()* {
     let $sid := doc(config:param-value($model, 'textgrid.webauth') || '?authZinstance='|| config:param-value($model, 'textgrid.authZinstance') || '&amp;loginname=' || config:param-value($model, 'textgrid.user') || '&amp;password=' || config:param-value($model, 'textgrid.password'))//xhtml:meta[@name='rbac_sessionid']/string(@content),
         $doc := doc($docpath)
     return
@@ -61,13 +85,12 @@ declare function mviewer:renderTILE($node as node(), $model as map(*), $docpath 
         <!-- TODO: Get Session ID from tgclient instead of $sid in this function -->
             {for $i in $doc//tei:link[starts-with(@targets, '#shape')]
                 let $shape := substring-before(substring-after($i/@targets, '#'), ' '),
-                    $teiuri := 
-                                if(contains(substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a'), '.'))
+                    $teiuri :=  if(contains(substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a'), '.'))
                                 then substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a')
                                 else 
                                     (: todo: find lates revision in collection :)
                                     substring-before(substring-after($i/@targets, $shape || ' textgrid:'), '#a') || '.0',
-                    
+                                
                     $imageuri := $doc//svg:image[following::svg:rect/@id eq $shape]/string(@xlink:href),
                     $offset := '&amp;wx=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@x), '%')) div 100 || '&amp;wy=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@y), '%')) div 100,
                     $range := '&amp;ww=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@width), '%')) div 100 || '&amp;wh=' || number(substring-before($doc//svg:rect[@id eq $shape]/string(@height), '%')) div 100
@@ -130,4 +153,3 @@ declare function mviewer:choose-xsl-and-transform($doc, $model as map(*)) {
     
     return $html
 };
-
