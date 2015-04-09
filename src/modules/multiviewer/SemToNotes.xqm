@@ -176,7 +176,7 @@ return
     <div class="section-header">
         <div class="container">
         <!-- Navigate to previous TEI/XML doc according to a rdf -->
-         {if ($next = '') then '' else
+         {if (ends-with($tilepath, $prev)) then '' else
             <div class="pull-left" style="position: absolute;left: 5px; top:66px;"><a href="?id={$prev}"><i class="fa fa-chevron-left" style="color: #00B4FF"></i></a></div>
          }
           <div class="row">
@@ -211,7 +211,7 @@ return
             }
           </div>
          <!-- Navigate to following TEI/XML doc according to a rdf -->
-        {if ($next = '') then '' else
+        {if (ends-with($tilepath, $next)) then '' else
             <div class="pull-right" style="position: absolute;right: 5px; top:66px;"><a href="?id={$next}"><i class="fa fa-chevron-right" style="color: #00B4FF"></i></a></div>
          }
         </div>
