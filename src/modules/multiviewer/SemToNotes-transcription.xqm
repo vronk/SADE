@@ -41,7 +41,7 @@ declare function dsk-t:transcription($tei as element(tei:TEI), $type as xs:strin
 let $xslt := 
                 if ($tei//tei:title[1] = 'Bellifortis')
                     then doc($projectdir || '/xslt/SemToNotes-Bellifortis-'|| $type ||'.xslt')
-                    else doc($projectdir || '/xslt/SemToNotes-'|| $type ||'.xslt')
+                    else doc('/db/apps/SADE/modules/multiviewer/xslt/db2xhtml.xsl')
 
 return
     if (not($xslt//*)) then
@@ -74,4 +74,3 @@ return
         else
     transform:transform($tei, $xslt, ())
 };
-
