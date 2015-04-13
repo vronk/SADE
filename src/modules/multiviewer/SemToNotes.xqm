@@ -8,19 +8,15 @@ import module namespace dsk-t="http://semtonotes.github.io/SemToNotes/dsk-transc
 declare namespace tei="http://www.tei-c.org/ns/1.0";
 declare namespace file="http://exist-db.org/xquery/file";
 declare namespace svg="http://www.w3.org/2000/svg";
-declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-declare namespace ore="http://www.openarchives.org/ore/terms/";
-declare namespace tg="http://textgrid.info/namespaces/metadata/core/2010";
+
+
 
 declare function dsk-view:coordinatesPolygon($shape as element(svg:polygon), $tgl) as xs:string {
 
   let $image := $tgl//svg:image
   let $width := xs:integer($image/@width/string())
   let $height := xs:integer($image/@height/string())
-  let $percentage := if($height > $width ) then
-        1500 div $height
-    else
-        1500 div $width
+  let $percentage := 1500 div $width
 
   let $string := $shape/@points/string()
   let $pointss := tokenize($string, ' ')
@@ -39,15 +35,14 @@ declare function dsk-view:coordinatesPolygon($shape as element(svg:polygon), $tg
   string-join($points, ' ')
 };
 
+
+
 declare function dsk-view:coordinatesRect($shape as element(svg:rect), $tgl) as xs:string {
 
   let $image := $tgl//svg:image
   let $width := xs:integer($image/@width/string())
   let $height := xs:integer($image/@height/string())
-  let $percentage := if($height > $width ) then
-        1500 div $height
-    else
-        1500 div $width  
+  let $percentage := 1500 div $width
 
   let $xs := substring-before($shape/@x/string(), '%')
   let $ys := substring-before($shape/@y/string(), '%')
@@ -74,10 +69,14 @@ declare function dsk-view:coordinatesRect($shape as element(svg:rect), $tgl) as 
   string-join(($p1, $p2, $p3, $p4), ' ')
 };
 
+
+
 declare function dsk-view:coordinates($shape as element(), $tgl) as xs:string {
   if (local-name($shape) = 'rect') then dsk-view:coordinatesRect($shape, $tgl)
   else dsk-view:coordinatesPolygon($shape, $tgl)
 };
+
+
 
 declare function dsk-view:annotations($tgl as element(tei:TEI)) {
   <annotations>
@@ -99,30 +98,9 @@ declare function dsk-view:annotations($tgl as element(tei:TEI)) {
   </annotations>
 };
 
-declare function dsk-view:navigation($tilepath as xs:string, $what as xs:string){
-(:input:)
-let $tile:= doc($tilepath)
-(: collections :)
-let $rdfcoll := collection(substring-before($tilepath, 'tile/') || 'agg')
-let $tilecoll := collection(substring-before($tilepath, 'tile/') || 'tile')
 
-(: get the first TEI doc from TILE object :)
-let $teiuri:= $tile//tei:link[1]/substring-before(substring-after(@targets, 'textgrid:'), '#')
-(: look up the previous base uri :)
-let $newtei:= 
-    if ($what = 'prev')
-    then $rdfcoll//ore:aggregates[ends-with(@rdf:resource, $teiuri)]/preceding-sibling::ore:aggregates[1]/string(@rdf:resource)
-    else $rdfcoll//ore:aggregates[ends-with(@rdf:resource, $teiuri)]/following-sibling::ore:aggregates[1]/string(@rdf:resource)
-(: check for a TILE object with this textgrid uri :)
-let $tileuri := $tilecoll//tei:link[contains(@targets, $newtei)][1]/base-uri()
-
-return
-substring-after($tileuri, 'data')
-};
 
 declare function dsk-view:render($tei as element(tei:TEI), $imguri as xs:string, $imgwidth as xs:float, $tilepath as xs:string) {
-let $prev := dsk-view:navigation($tilepath, 'prev')
-let $next := dsk-view:navigation($tilepath, 'next')
 
 let $params :=
 <parameters>
@@ -156,6 +134,7 @@ let $pages-div :=
 </div>
 :)
 
+
 return
 
 let $resizable := (
@@ -175,10 +154,6 @@ return
     
     <div class="section-header">
         <div class="container">
-        <!-- Navigate to previous TEI/XML doc according to a rdf -->
-         {if (ends-with($tilepath, $prev)) then '' else
-            <div class="pull-left" style="position: absolute;left: 5px; top:66px;"><a href="?id={$prev}"><i class="fa fa-chevron-left" style="color: #00B4FF"></i></a></div>
-         }
           <div class="row">
             <div class="col-sm-2">
               <!-- Remove the .animated class if you don't want things to move -->
@@ -210,10 +185,6 @@ return
                 </div>
             }
           </div>
-         <!-- Navigate to following TEI/XML doc according to a rdf -->
-        {if (ends-with($tilepath, $next)) then '' else
-            <div class="pull-right" style="position: absolute;right: 5px; top:66px;"><a href="?id={$next}"><i class="fa fa-chevron-right" style="color: #00B4FF"></i></a></div>
-         }
         </div>
     </div>
     
@@ -248,8 +219,10 @@ return
       { () (:$pages-div:) }
       <div id="window-image-inner">
         <div class="h1">
-          <span>{ $tei//tei:institution/text() || ', ' || $tei//tei:collection/text() || ' ' ||
-      $tei//tei:idno/text() }</span>
+          <span>{ 
+              if ($tei//tei:institution/text() and $tei//tei:collection/text() and $tei//tei:idno/text() )
+                then $tei//tei:institution/text() || ', ' || $tei//tei:collection/text() || ' ' || $tei//tei:idno/text()
+                else 'Faksimile' }</span>
           <div class="toolbar">
             <i class="fa fa-search-plus"></i> 	&#160;
             <i class="fa fa-search-minus"></i> 	&#160;
@@ -260,7 +233,7 @@ return
           </div>
         </div>
         <div class="content">
-          <img id="img" src="/exist/apps/textgrid-connect/digilib/{substring-after(substring-before($tilepath, '/data'), 'sade-projects/')}/{$imguri}?dh=1500&amp;dw=1500"/>
+          <img id="img" src="/exist/apps/textgrid-connect/digilib/{substring-after(substring-before($tilepath, '/data'), 'sade-projects/')}/{$imguri}?dw=1500"/>
         </div>
       </div>
       { $resizable }
@@ -307,4 +280,5 @@ return
   --></script>
 </body>
 </html>
+
 };
