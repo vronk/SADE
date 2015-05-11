@@ -8,8 +8,9 @@ import module namespace dsk-t="http://semtonotes.github.io/SemToNotes/dsk-transc
 declare namespace tei="http://www.tei-c.org/ns/1.0";
 declare namespace file="http://exist-db.org/xquery/file";
 declare namespace svg="http://www.w3.org/2000/svg";
-
-
+declare namespace rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+declare namespace ore="http://www.openarchives.org/ore/terms/";
+declare namespace tg="http://textgrid.info/namespaces/metadata/core/2010";
 
 declare function dsk-view:coordinatesPolygon($shape as element(svg:polygon), $tgl) as xs:string {
 
