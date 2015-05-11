@@ -98,9 +98,32 @@ declare function dsk-view:annotations($tgl as element(tei:TEI)) {
   </annotations>
 };
 
+declare function dsk-view:navigation($tilepath as xs:string, $what as xs:string){
+(:input:)
+let $tile:= doc($tilepath)
+(: collections :)
+let $rdfcoll := collection(substring-before($tilepath, 'tile/') || 'agg')
+let $tilecoll := collection(substring-before($tilepath, 'tile/') || 'tile')
 
+(: get the first TEI doc from TILE object :)
+let $teiuri:= $tile//tei:link[1]/substring-before(substring-after(@targets, 'textgrid:'), '#')
+(: look up the previous base uri :)
+let $newtei:= 
+    if ($what = 'prev')
+    then $rdfcoll//ore:aggregates[ends-with(@rdf:resource, $teiuri)]/preceding-sibling::ore:aggregates[1]/string(@rdf:resource)
+    else $rdfcoll//ore:aggregates[ends-with(@rdf:resource, $teiuri)]/following-sibling::ore:aggregates[1]/string(@rdf:resource)
+(: check for a TILE object with this textgrid uri :)
+let $tileuri := if ( ($tilecoll//tei:link[contains(@targets, $newtei)][1]/base-uri())[1] = '' )
+then ''
+else $tilecoll//tei:link[contains(@targets, $newtei)][1]/base-uri()
+
+return
+substring-after($tileuri, 'data')
+};
 
 declare function dsk-view:render($tei as element(tei:TEI), $imguri as xs:string, $imgwidth as xs:float, $tilepath as xs:string) {
+let $prev := dsk-view:navigation($tilepath, 'prev')
+let $next := dsk-view:navigation($tilepath, 'next')
 
 let $params :=
 <parameters>
@@ -154,6 +177,12 @@ return
     
     <div class="section-header">
         <div class="container">
+        
+        <!-- Navigate to previous TEI/XML doc according to a rdf -->
+         {if (ends-with($tilepath, $prev)) then '' else
+            <div class="pull-left" style="position: absolute;left: 5px; top:66px;"><a href="?id={$prev}"><i class="fa fa-chevron-left" style="color: #00B4FF"></i></a></div>
+         }
+        
           <div class="row">
             <div class="col-sm-2">
               <!-- Remove the .animated class if you don't want things to move -->
@@ -185,6 +214,12 @@ return
                 </div>
             }
           </div>
+          
+           <!-- Navigate to following TEI/XML doc according to a rdf -->
+        {if (ends-with($tilepath, $next)) then '' else
+            <div class="pull-right" style="position: absolute;right: 5px; top:66px;"><a href="?id={$next}"><i class="fa fa-chevron-right" style="color: #00B4FF"></i></a></div>
+         }
+          
         </div>
     </div>
     
