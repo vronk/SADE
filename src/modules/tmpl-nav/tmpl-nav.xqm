@@ -43,10 +43,11 @@ declare
 function nav:subitem($node as node(), $model as map(*)) {
     if($model("subitem")/@class) then
         <span class="{$model("subitem")/@class}">&#160;</span>
-    else
+    else if ($model("subitem")/name() != 'divider') then
         <a href="{string($model("subitem")/@link)}">{string($model("subitem")/@label)}</a>
+        else <span>&#160;</span>
 };
-
+(: no call for subitemchoice...
 declare
 function nav:subitemchoice($node as node(), $model as map(*)) {
 
@@ -70,7 +71,7 @@ function nav:subitemchoice($node as node(), $model as map(*)) {
             <b>not defined: {node-name($model("subitem"))}</b>
 
 };
-
+:)
 declare function nav:edit($node as node(), $model as map(*)) {
 let $new := request:get-parameter("new", "0")
 return
