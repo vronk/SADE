@@ -161,7 +161,7 @@ let $pages-div :=
 
 return
 
-let $resizable := (
+let $resizable := (i
 <div class="resize-n" xmlns="http://www.w3.org/1999/xhtml"></div>,
 <div class="resize-e" xmlns="http://www.w3.org/1999/xhtml"></div>,
 <div class="resize-s" xmlns="http://www.w3.org/1999/xhtml"></div>,
@@ -257,7 +257,7 @@ return
         <div class="h1">
           <span>{ 
               if ($tei//tei:institution/text() and $tei//tei:collection/text() and $tei//tei:idno/text() )
-                then $tei//tei:institution/text() || ', ' || $tei//tei:collection/text() || ' ' || $tei//tei:idno/text()
+                then $tei//tei:institution/text() || ', ' || $tei//tei:collection/text() || ' ' || $tei//tei:idno[1]/text()
                 else 'Faksimile' }</span>
           <div class="toolbar">
             <i class="fa fa-search-plus"></i> 	&#160;
