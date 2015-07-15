@@ -161,7 +161,7 @@ let $pages-div :=
 
 return
 
-let $resizable := (i
+let $resizable := (
 <div class="resize-n" xmlns="http://www.w3.org/1999/xhtml"></div>,
 <div class="resize-e" xmlns="http://www.w3.org/1999/xhtml"></div>,
 <div class="resize-s" xmlns="http://www.w3.org/1999/xhtml"></div>,
