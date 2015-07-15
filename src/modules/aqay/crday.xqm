@@ -221,7 +221,9 @@ declare function crday:elem-r($path-nodes as node()*, $path as xs:string, $ns as
 	$dummy-undeclare-ns := util:declare-namespace("",xs:anyURI(""))
 	return 
 (:	<Term path="{fn:concat("//", $path)}" name="{text:groups($path, "/([^/]+)$")[last()]}" count="{$path-count}" count_text="{$text-count}"  count_distinct_text="{$text-count-distinct}">{ :)
-	<Term path="{fn:concat("", translate($path,'/','.'))}" name="{(text:groups($path, "/([^/]+)$")[last()],$path)[1] }" count="{$path-count}" count_text="{$text-count}"  count_distinct_text="{$text-count-distinct}">{
+	<Term path="{fn:concat("", translate($path,'/','.'))}" name="{
+		(: fulltext index and text module deprecated text:groups($path...) removed :)
+		(($path, "/([^/]+)$")[last()],$path)[1] }" count="{$path-count}" count_text="{$text-count}"  count_distinct_text="{$text-count-distinct}">{
 	   (attribute ns {$ns},
 	  if ($depth > 0) then
 	    for $ns-qname in $child-ns-qnames[. != '']
