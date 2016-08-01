@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<div id="left">
+    <h2 class="demoHeaders">Suche/Navigation</h2>
+    
+    <!-- Accordion -->
+    <div id="accordion">
+        <div>
+            <h3>
+                <a href="#">Volltext</a>
+            </h3>
+            <div id="fcs-query" class="module">
+                <form>
+                    <input name="query" type="text" size="18%"/>
+                    <input type="hidden" name="maximumRecords" value="10"/>
+                    <input type="hidden" name="current-template" value="fcs-sade-search-result"/>
+                    <input type="submit" value="Suchen"/>
+                </form>
+            </div>
+        </div>
+        <div>
+            <h3>
+                <a href="#">Zeit</a>
+            </h3>
+            <div>
+                <div id="datepicker"/>
+            </div>
+        </div>
+        <div>
+            <h3>
+                <a href="#">Personen</a>
+            </h3>
+            <div>
+                <div class="module fcs-scan fcs:scan?scanClause=person&amp;max-terms=50">
+                    scan=person
+                 </div>
+                    <!--
+                <div id="fcs-sade-scan-person" class="module">
+                   <!-\- <sade:param key="accepts.operation">scan</sade:param>
+                    <sade:param key="accepts.scanClause">person</sade:param>
+                    <sade:param key="operation">scan</sade:param>
+                    <sade:param key="scanClause">person</sade:param>
+                    <sade:param key="maximumTerms">30</sade:param>
+                    <sade:param key="sort">size</sade:param>
+                    <sade:param key="current-template">fcs-sade-scan-person</sade:param>-\->
+                </div>-->
+            </div>
+        </div>
+        <div>
+            <h3>
+                <a href="#">Orte</a>
+            </h3>
+            <div>
+                <div class="module fcs-scan fcs:scan?scanClause=placeName&amp;max-terms=30">
+                    scan=placeName
+                </div>
+                <div id="fcs-sade-scan-place" class="module">
+                    <!--<sade:param key="accepts.operation">scan</sade:param>
+                    <sade:param key="accepts.scanClause">placeName</sade:param>
+                    <sade:param key="operation">scan</sade:param>
+                    <sade:param key="scanClause">placeName</sade:param>
+                    <sade:param key="maximumTerms">30</sade:param>
+                    <sade:param key="sort">size</sade:param>
+                    <sade:param key="current-template">fcs-sade-scan-place</sade:param>-->
+                    <!--                        <sade:param key="target">fcs-sade-search-result</sade:param>-->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<div id="header" class="ui-widget-content">
+    <div>
+        <h1>
+            <span class="app:title">Schnitzler Tagebuch<span class="subtitle">online</span>
+            </span>
+        </h1>
+    </div>
+    <div id="top-menu">
+        <a href="index.html">home </a>
+        <a href="impressum.html"> impressum</a>
+    </div>
+</div>

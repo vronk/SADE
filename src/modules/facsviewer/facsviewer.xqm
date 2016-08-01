@@ -2,41 +2,192 @@ xquery version "3.0";
 
 module namespace facs="http://www.oeaw.ac.at/icltt/cr-xq/facsviewer";
 import module namespace config="http://exist-db.org/xquery/apps/config" at "../../core/config.xqm";
-import module namespace config-params="http://exist-db.org/xquery/apps/config-params" at "../../core/config.xql";
-import module namespace repo-utils = "http://aac.ac.at/content_repository/utils" at "../../core/repo-utils.xqm"; 
+(:import module namespace fx="http://www.functx.com" at "lib/functx.xqm";:)
 declare namespace exist="http://exist.sourceforge.net/NS/exist";
 declare namespace tei="http://www.tei-c.org/ns/1.0";
 import module namespace kwic="http://exist-db.org/xquery/kwic";
 import module namespace ngram="http://exist-db.org/xquery/ngram";
-import module namespace fcs = "http://clarin.eu/fcs/1.0" at "../fcs/fcs.xqm";
 
+(:~
+ : Provides functions for extracting fragments ("pages") from xml/TEI-documents 
+ : and parallel views with facsimile. 
+ :)
 
-(: moved to fcs.xqm :)
-(:declare function facs:add-exist-match($match as node()) {
-    let $ancestor-with-id:= $match/ancestor-or-self::*[@xml:id][1]
-    return  if (exists($ancestor-with-id)) 
-            then facs:add-exist-match($ancestor-with-id, $match)
-            else $match
+declare function facs:common-ancestor($ms1 as element(),$ms2 as element()) as node()* {
+    let $tree:=$ms1/ancestor::*[some $x in descendant::* satisfies $x is $ms2][1]
+    return $tree
 };
 
-declare function facs:add-exist-match($ancestor as node(), $match as node()) {
-    typeswitch ($ancestor)
-        case element()  return   element {name($ancestor)} {
-                                    $ancestor/@*,
-                                    if ((some $x in $ancestor/@* satisfies $x is $match) or $ancestor is $match)
-                                    then <exist:match>{$ancestor/node() except $ancestor/@*}</exist:match> 
-                                    else for $i in $ancestor/node() except $ancestor/@* 
-                                         return facs:add-exist-match($i, $match)
-                                }
-        case text()     return $ancestor
-        default         return $ancestor
-};:)
-
-declare function facs:filename-to-path($filename as xs:string, $x-context){
-	let $config:=config:config($x-context)
-	return facs:filename-to-path($filename, $x-context, map{"config":=$config})
+declare function facs:milestone-chunk-ns($ms1 as element(),$ms2 as element()) as node()* {
+    let $tree:=facs:common-ancestor($ms1,$ms2)
+    return 
+        if (exists($tree)) 
+        then facs:milestone-chunk-ns($ms1, $ms2, $tree) 
+        else ()
 };
 
+(: see http://wiki.tei-c.org/index.php/Milestone-chunk.xquery :)
+declare function facs:milestone-chunk-ns($ms1 as element(), $ms2 as element(), $node as node()*) as node()* {
+    typeswitch ($node)
+        case element() return
+            if ($node is $ms1) 
+            then $node
+            else 
+                if ( some $n in $node/descendant::* satisfies ($n is $ms1 or $n is $ms2) )
+                then
+                    element { QName(namespace-uri($node), name($node)) }
+                            {(   
+                                $node/@*,
+                                for $i in $node/node()
+                                return facs:milestone-chunk-ns($ms1, $ms2, $i) )}
+                else 
+                    if ( $node >> $ms1 and $node << $ms2 ) 
+                    then $node
+                    else ()
+        case attribute() return 
+            $node 
+        default return 
+            if ( $node >> $ms1 and $node << $ms2 ) 
+            then $node
+            else ()
+};
+
+(:declare function facs:page-by-matches($chunk) as node()* {
+    let $matches-in-chunk:= util:expand($chunk)//exist:match,
+        $pbs:=              facs:page-ids-from-matches($matches-in-chunk)
+    return 
+        for $p in $pbs
+            let $pb1:=  $p,
+                $pb2:=  $pb1/following::pb[1]
+            return 
+                <div type="page">{facs:milestone-chunk-ns($pb1,$pb2)}</div>
+}; :)
+
+(: main function: returns fragments of original pages possibly with highlighted ft:/ngram:matches. 
+   important: $input must be a reference to the stored node() otherwise util:get-fragment-between
+   won't work. :)
+declare function facs:page($hit as node()?) as element(tei:div)* {
+	let $default-expand:= util:expand($hit)
+    let $match:=
+	   typeswitch ($default-expand)
+	       case attribute()    return ngram:add-match($default-expand)
+  	       default             return $default-expand
+  	let $page-ids-from-hit:= facs:page-ids-from-hit($hit)   
+  	
+  	
+    (: get the nearest page break for the match - we support the following situations: 
+        a) $input is a big chunk (maybe tei:text) with a lot of exist:matches 
+        b) $input is a smaller chunk with one or a few exist:matches (mabe tei:p[ft:query(.,'...')])
+        c) $input is a pb element itself
+        
+        depending on this we have to expect the relevant pb-Elements in different 
+        positions: either 
+            a) for sure inside of $input, 
+            b) inside of OR before $input (tei:p _may_ have a pb before )
+    :)	       
+    let $from-expanded:= switch (true())
+                            case ($input/self::pb)      return $input 
+                            case ($match//exist:match)  return $match//exist:match/preceding::pb[1]
+                            case ($match//pb)           return $match//pb[1]
+                            default                     return $match/preceding::pb[1]
+        
+    let $from-id:=  if ($from-expanded/@xml:id)
+                    then $from-expanded/@xml:id
+                    else
+                        if ($from-expanded/@facs)
+                        then $from-expanded/@facs
+                        else (), 
+        (: get the original (stored) pb-Element via @xml:id or @facs :)
+        $from:= $input//pb[@xml:id eq $from-id or @facs eq $from-id],
+        (: fallback to positional lookup just in case pbs have no id or facs attribute - possibly costy :)
+        $from-via-position:=
+            if (exists($from)) then () 
+            else 
+                let $count-prec-pbs:=$from-expanded/count(preceding::pb)
+                return $input//pb[position() eq xs:int($count-prec-pbs)+1],
+        $to:=   $from/following::pb[1],
+        $frag:= util:get-fragment-between($from,$to,true(),true()),
+        $parse:=util:parse($frag)
+        (:$pbInParse:=$parse//pb[1],:)
+        (:$page:= facs:descend-to($parse, $pbInParse):)
+    return 
+        <div xmlns="http://www.tei-c.org/ns/1.0" type="page">{
+            $from/@*,
+            (:$page/*:)
+            $parse//*[count(*)>1][1]
+        }</div>
+};
+
+declare function facs:page-by-id($pageid as xs:string,$text as element()) as element()* {
+    let $pb1:=      $text//pb[@facs = $pageid],
+        $pb2:=      $pb1/following::pb[1],
+        $frag:=     util:parse(util:get-fragment-between($pb1,$pb2,true(),true())),
+        $content:=  $frag//*[count(*)>1][1]
+    return facs:wrap-page($content)
+};  
+
+declare function facs:page-from-hit ($pageid as xs:string, $hit as element()) as element()* {
+    let $expand:=           util:expand($hit)
+    let $ms1:=              $expand//pb[@facs = $pageid],
+        $ms2:=              $ms1/following::pb[1],
+        $common:=           $ms1/ancestor::*[some $x in descendant::* satisfies $x is $ms2][1],
+        $page-content:=     if (exists($ms1)) 
+                            then facs:milestone-chunk-ns($ms1,$ms2,$common)
+                            else ()
+    return 
+        if (exists($page-content)) 
+        then facs:wrap-page($page-content)
+        else ()
+};
+
+declare function facs:wrap-page($page-content as node()*) as element() {
+    <div type="page">{$page-content}</div>
+}; 
+
+declare function facs:pages-from-hit ($hit as element()) as node()* {
+    facs:pages-from-hit($hit, 1, 10)
+};
+
+declare function facs:pages-from-hit ($hit as element(), $startAtPage as xs:int, $howManyPages as xs:int) as node()* {
+    let $matches:=  kwic:get-matches($hit),
+        $pbs:=      distinct-values($matches!facs:page-id-from-match(.)),
+        $subseq:=   subsequence($pbs,$startAtMatch,$howManyMatches)
+    return ()
+};
+
+
+declare function facs:pb-from-match($match as element(exist:match)) as element()? {
+    let $pbs := ($match/preceding::pb[1],$match/preceding::tei:pb[1])
+    return $pbs[1]
+};
+
+declare function facs:page-id-from-match($match as element(exist:match)) as xs:string {
+    let $pb:=   facs:pb-from-match($match)
+    let $ids := ($pb/@xml:id,$pb/@facs,$pb/@n)
+    return $ids[1]
+};
+
+declare function facs:pages-from-hit ($hit as element()) as map? {
+    let $matches:=  util:expand($hit)//exist:match
+    return
+        if (exists($matches))
+        then
+            map:new(
+                for $m in $matches 
+                group by $pid:=$m/preceding::pb[1]/@facs
+                return map:entry($pid, $m)
+            )
+        else ()
+}; 
+
+declare function facs:highlight-matches($page as element(tei:div)?) as element(tei:div)? {
+    ()
+}; 
+
+(: returns distinct resourcefragment-pids = page-ids from a ft-/ngram-query :)
+declare function facs:page-ids-from-hit($hit as element()) as xs:string* {
+    (kwic:get-matches($hit)/preceding::pb[1]/@facs)
+};
 
 declare function facs:filename-to-path($filename as xs:string, $x-context, $config){
     let $facs-path:=    config:param-value((), $config, 'facsviewer', '', "facs.path"),
@@ -49,131 +200,4 @@ declare function facs:filename-to-path($filename as xs:string, $x-context, $conf
             else (if (ends-with($facs-path,'/')) then $facs-path else $facs-path||'/')),
             $facs-prefix,$filename,$facs-suffix
         )
-};
-
-
-
-declare function facs:doc-uri-to-project-id($uri as xs:anyURI) as xs:string? {
-    if ($uri!='/.')
-    then 
-        let $path:=util:collection-name($uri||".") (: dot needed to get to the innermost collection, otherwise collection-name("/db/collection") wil return /db instead of /db/collection :)
-        let $project-dirs:=collection($config-params:projects-dir)//param[@key='data-dir']
-        let $log:=if(empty($project-dirs)) then util:log("INFO","$project-dirs is empty") else ()
-        return 
-            if ($project-dirs!replace(.,'/$','') = $path) 
-            then
-                let $project-id:=$project-dirs[replace(.,'/$','') = $path]  /ancestor::config//param[@key='project-id']
-                return 
-                    if ($project-id !='' and config:project-exists($project-id))
-                    then ($project-id,util:log("INFO","$project-id: "||$project-id))
-                    else ()
-            else (facs:doc-uri-to-project-id(xs:anyURI(replace($path,'/[^/.]*?$','')||"/.")))
-    else ()
-};
-
-declare function facs:innerContent($input as node()) as node() {
-    let $content:=  typeswitch ($input)
-                        case attribute()     return $input
-                        case text()          return $input
-                        case document-node() return $input/*
-                        case element(TEI)    return $input/text
-                        default              return $input/*
-    return  switch (count($content))
-                case 0      return $input
-                case 1      return facs:innerContent($content) 
-                default     return $input
-};
-    
-declare function facs:create-scratchfile($doc-uri) {
-    let $facs:page-element:="div",
-        $facs:page-element-namespace:="http://www.tei-c.org/ns/1.0",
-        $facs:page-element-attributes:="type='page' n='{pos}'"
-    return facs:create-scratchfile($doc-uri,$facs:page-element,$facs:page-element-namespace,$facs:page-element-attributes)
-};
-
-declare function facs:create-scratchfile($doc-uri, $facs:page-element, $facs:page-element-namespace, $facs:page-element-attributes) {
-    (: TODO read from config :)
-    let $doc-filename:=     replace($doc-uri,'/.*/','')
-    let $project:=          facs:doc-uri-to-project-id($doc-uri)
-    let $config:=           if (config:project-exists($project)) 
-                            then map {"config" := config:project-config($project)} 
-                            else ()
-    let $data-dir:=         config:param-value($config,"data-dir")
-    let $pages-project-dir:=config:param-value($config,"pages-dir")
-    let $data-dir-to-pages-dir:=replace($pages-project-dir,$data-dir,'')
-    let $scratchfile-filename:="pages-"||$doc-filename
-    
-    let $doc:=  if (doc-available($doc-uri))
-                then doc($doc-uri)
-                else util:log("INFO", "document "||$doc-uri||" not available")
-                
-    let $create-pages-project-dir:= if (xmldb:collection-available($pages-project-dir))
-                                    then ()
-                                    else xmldb:create-collection($data-dir,$data-dir-to-pages-dir)
-    let $t1:=       current-time()
-    let $pages:=    if (exists($doc) and config:project-exists($project))
-                    then 
-                        for $pb at $pos in ($doc//pb|$doc//tei:pb)
-                        let $page-id:=  let $orig-id:=  switch(true())
-                                                            case exists($pb/@xml:id)return $pb/@xml:id
-                                                            case exists($pb/@facs)  return $pb/@facs
-                                                            default                 return fn:format-number($pos,'000000')
-                                        return "page_"||$orig-id
-                        let $next:=     ($pb/following::tei:pb|$pb/following::pb)[1]
-                        let $log:=       util:log("INFO", "start processing "||$page-id)
-                        let $content:=  util:parse(
-                                            util:get-fragment-between($pb,$next,true(),true())
-                                        )
-                        (:let $innerContent:=facs:innerContent($content)
-                        return <div type="page" xml:id="{$page-id}">{$innerContent}</div>:)
-                        return 
-                            element {QName($facs:page-element-namespace,$facs:page-element)} {
-                                if ($facs:page-element-attributes != '')
-                                then 
-                                    for $attr in tokenize($facs:page-element-attributes, '\s+')
-                                    let $name:=substring-before($attr,'='),
-                                        $value:=replace(substring-after($attr,'='),'(^["'']|["'']$)','')
-                                    return attribute {$name} {
-                                        switch ($value)
-                                            case '{pos}'    return xs:string($pos)
-                                            default         return xs:string($value)
-                                    }
-                                else (),
-                                attribute xml:id {$page-id},
-                                $content
-                            }
-                     else ()
-    let $t2:=       current-time()   
-    let $scratchfile-content:=  <TEI xmlns="http://www.tei-c.org/ns/1.0">
-                                    <teiHeader>
-                                        <fileDesc>
-                                            <titleStmt>
-                                               <title>Pages from {$doc-filename}</title>
-                                            </titleStmt>
-                                            <publicationStmt>
-                                               <p>Publication Information</p>
-                                            </publicationStmt>
-                                            <sourceDesc>
-                                               <p>Automatically generated by exist:get-fragment-between()</p>
-                                            </sourceDesc>
-                                            <revisionDesc>
-                                                <change type="created" when="{current-dateTime()}" who="{xmldb:get-current-user()}"/>
-                                             </revisionDesc>
-                                        </fileDesc>
-                                    </teiHeader>
-                                    <text>
-                                        <body>{$pages}</body>
-                                    </text>
-                                </TEI>
-    
-    return 
-        if (exists($doc) and config:project-exists($project)) 
-        then 
-            let $log:=util:log("INFO","created a scratchfile "||$scratchfile-filename),
-                $log:=util:log("INFO","writing it to "||$pages-project-dir)
-            let $store:=xmldb:store($pages-project-dir,$scratchfile-filename,$scratchfile-content)
-            let $reindex:=xmldb:reindex($pages-project-dir)
-(:            let $log:=util:log("INFO","reindexing "||$pages-project-dir):)
-            return ()
-        else ()
 };

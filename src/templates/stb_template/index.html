@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<div class="templates:init">
+    <div class="templates:surround?with=page.html&amp;at=content">
+        <div class="row-fluid">
+            <div class="span3">
+                <div class="templates:include?path=menu.xml"/>
+            </div>
+            <div id="detail-container" class="span4">
+                <div class="templates:include?path=detail.xml"/>
+            </div>
+            <div id="main">
+                <div class="templates:if-parameter-unset?param=query">
+                    <div class="templates:include?path=content/welcome.xml">welcome</div>
+<!--             show query_input if no query? - would need to be positioned better.. 
+                        <div id="search-container" class="templates:include?path=query_input.html">search</div>-->
+                </div>
+                <div class="templates:if-parameter-set?param=query">
+                    <div id="results" class="fcs:query">
+                        <p>Found: <span id="hit-count" class="fcs:hit-count"/> matches.</p>
+                        <div class="fcs:show-hits?howmany=20"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

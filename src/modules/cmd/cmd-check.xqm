@@ -1,4 +1,4 @@
-        xquery version "1.0";
+xquery version "3.0";
 module namespace cmdcheck = "http://clarin.eu/cmd/check";
 (: checking (trying to ensure) consistency of the IDs in CMD-records (MdSelfLink vs. ResourceProxies vs. IsPartOf)
 
@@ -113,7 +113,17 @@ let $profiles-summary :=
             
              
             let $missing-profiles-records := $context//cmd:MdProfile[. = '']/ancestor::cmd:CMD
-            let $missing-profiles-distinct-names := distinct-values($missing-profiles-records/cmd:Components/*/local-name())
+            
+            let $missing-profiles-distinct-names :=
+                try {
+                     (: util:parse(cqlparser:parse-cql($cql-expression, "XCQL")) :)
+                     distinct-values($missing-profiles-records/cmd:Components/*/local-name())
+                }
+(:                   catch err:XPDY0002 :)
+                catch *
+                { 
+                  diag:diagnostics("general-error", ($err:code , $err:description, $err:value, ' x-context: ', $x-context, ' count records: ', count($missing-profiles-records)))
+                }
                         
             let $missing-profiles := for $profile-name in $missing-profiles-distinct-names
                 (:  if ID missing try to fill up from smc:cmd-terms :)

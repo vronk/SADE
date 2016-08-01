@@ -1,6 +1,6 @@
 
 
-import module namespace docs="http://exist-db.org/xquery/docs" at "/db/apps/sade/modules/gendocs/scan.xql";
+import module namespace docs="http://exist-db.org/xquery/docs" at "scan.xql";
 
 
- docs:load-fundocs("/db/apps/sade", "/db/apps/sade/modules/gendocs")
+ docs:load-fundocs("/db/apps/cr-xq", "/db/apps/cr-xq/modules/gendocs")
