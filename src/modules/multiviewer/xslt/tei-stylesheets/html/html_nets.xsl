@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,17 +37,17 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
-    <xsl:variable name="squo">'</xsl:variable>
+    <xsl:variable name="quo">'</xsl:variable>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>Process element eTree</desc>
     </doc>
     <xsl:template match="tei:forest|tei:eTree|tei:eLeaf">
+        <xsl:variable name="thistreestyle" select="if (ancestor-or-self::eTree/@rend) then ancestor-or-self::eTree[last()]/@rend             else $treestyle"/>
         <xsl:choose>
-            <xsl:when test="$treestyle='google'">
+            <xsl:when test="$thistreestyle='googlechart'">
                 <xsl:if test="not(preceding::tei:eTree or preceding::tei:forest)">
                     <script type="text/javascript" src="https://www.google.com/jsapi"/>
                     <script type="text/javascript">
@@ -113,7 +113,7 @@ of this software, even if advised of the possibility of such damage.
                     <span id="chart{$TREEID}"/>
                 </xsl:if>
             </xsl:when>
-            <xsl:when test="$treestyle='d3'">
+            <xsl:when test="$thistreestyle='d3VerticalTree'">
                 <xsl:choose>
                     <xsl:when test="not(ancestor::tei:eTree or ancestor::tei:forest)">
                         <xsl:variable name="maxlabel" select="(max(descendant::tei:label/string-length()))"/>
@@ -170,12 +170,61 @@ of this software, even if advised of the possibility of such damage.
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:when>
+            <xsl:when test="$thistreestyle='d3DragDropTree'">
+                <xsl:variable name="TREEID" select="generate-id()"/>
+                <xsl:choose>
+                    <xsl:when test="not(ancestor::tei:eTree or ancestor::tei:forest)">
+                        <div id="viz{$TREEID}"/>
+                        <script src="dndTree.js"/>
+                        <script type="text/javascript">
+	      treeData = {<xsl:call-template name="treelabel"/>};
+	      dragndrop("#viz<xsl:value-of select="$TREEID"/>");
+	    </script>
+                    </xsl:when>
+                    <xsl:otherwise>{<xsl:call-template name="treelabel"/>
+                        <xsl:text>} </xsl:text>
+                        <xsl:if test="following-sibling::tei:*">, 
+	  </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+            <xsl:when test="$thistreestyle='d3CollapsableTree'">
+                <xsl:choose>
+                    <xsl:when test="not(ancestor::tei:eTree or ancestor::tei:forest)">
+                        <xsl:variable name="maxlabel" select="(max(descendant::tei:label/string-length()))"/>
+                        <xsl:variable name="treeheight" select="max(descendant-or-self::*[self::tei:eTree       or       self::tei:eLeaf]/(count(tei:eLeaf)+count(tei:eTree)))       * 155"/>
+                        <xsl:variable name="treewidth" select="count(descendant-or-self::*[self::tei:eTree]) * 130"/>
+                        <xsl:variable name="treedepth" select="max(descendant::*[(self::tei:eTree       or self::tei:eLeaf) and       not(tei:eTree or       tei:eLeaf)]/count(ancestor-or-self::*[self::tei:eTree       or self::tei:eLeaf]))"/>
+                        <xsl:variable name="TREEID" select="generate-id()"/>
+                        <div class="treediagram" style="width:{$treewidth} {@style}" id="viz{$TREEID}"/>
+                        <script type="text/javascript">
+     treeData = {<xsl:call-template name="treelabel"/>};
+     drawCollapsibleTree("#viz<xsl:value-of select="$TREEID"/>",<xsl:value-of select="$treewidth"/>,<xsl:value-of select="$treeheight"/>);
+
+     d3.select(self.frameElement).style("height", "500px");
+
+    </script>
+                    </xsl:when>
+                    <xsl:otherwise>{<xsl:call-template name="treelabel"/>
+                        <xsl:text>} </xsl:text>
+                        <xsl:if test="following-sibling::tei:*">, 
+	  </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
         </xsl:choose>
     </xsl:template>
     <xsl:template name="treelabel">
         <xsl:text>"name":'</xsl:text>
-        <xsl:apply-templates select="tei:label"/>
+        <xsl:for-each select="tei:label">
+            <xsl:apply-templates/>
+        </xsl:for-each>
         <xsl:text>', </xsl:text>
+        <xsl:if test="tei:label/@rend">
+            <xsl:text>"style":"</xsl:text>
+            <xsl:value-of select="tei:label/@rend"/>
+            <xsl:text>", </xsl:text>
+        </xsl:if>
         <xsl:choose>
             <xsl:when test="tei:label/@xml:id">
                 <xsl:text>"id":"</xsl:text>
@@ -200,17 +249,14 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:text>", </xsl:text>
             </xsl:when>
         </xsl:choose>
-        <xsl:text>"showlink":'</xsl:text>
+        <xsl:text>"showlink":"</xsl:text>
         <xsl:value-of select="if (self::tei:forest) then 'invisible' else ''"/>
-        <xsl:text>', </xsl:text>
-        <xsl:text>"type":'</xsl:text>
-        <xsl:apply-templates select="@type"/>
-        <xsl:if test="self::tei:eLeaf">
-            <xsl:text> leaf</xsl:text>
-        </xsl:if>
-        <xsl:text>', </xsl:text>
+        <xsl:text>", </xsl:text>
+        <xsl:text>"type":"</xsl:text>
+        <xsl:value-of select="(if (@type) then @type else '', if (self::tei:eLeaf) then 'leaf'  else '')"/>
+        <xsl:text>" </xsl:text>
         <xsl:if test="tei:eTree|tei:eLeaf">
-            <xsl:text>"children":[</xsl:text>
+            <xsl:text>,"children":[</xsl:text>
             <xsl:apply-templates select="*[not(self::tei:label)]"/>
             <xsl:text>]</xsl:text>
         </xsl:if>
@@ -223,6 +269,6 @@ of this software, even if advised of the possibility of such damage.
         <br/>
     </xsl:template>
     <xsl:template match="tei:eLeaf/tei:label/text()|tei:eTree/tei:label/text()">
-        <xsl:value-of select="replace(.,$squo,concat('\\',$squo))"/>
+        <xsl:value-of select="replace(.,$quo,concat('\\',$quo))"/>
     </xsl:template>
 </xsl:stylesheet>

@@ -10,7 +10,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -39,9 +39,7 @@ of this software, even if advised of the possibility of such damage.
             <p>Id: $Id: identity.xsl 9646 2011-11-05 23:39:08Z rahtz $</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
-    </doc>
-
-    <!-- identity transform -->
+    </doc><!-- identity transform -->
     <xsl:template match="@*|text()|comment()|processing-instruction()" mode="iden">
         <xsl:copy-of select="."/>
     </xsl:template>

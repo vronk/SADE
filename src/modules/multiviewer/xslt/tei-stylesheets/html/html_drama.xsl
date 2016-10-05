@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,7 +37,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -206,12 +205,16 @@ of this software, even if advised of the possibility of such damage.
                 </xsl:for-each-group>
             </xsl:when>
             <xsl:otherwise>
-                <div>
-                    <xsl:call-template name="makeRendition">
-                        <xsl:with-param name="default">p-in-sp</xsl:with-param>
-                    </xsl:call-template>
-                    <xsl:apply-templates/>
-                </div>
+                <xsl:call-template name="splitHTMLBlocks">
+                    <xsl:with-param name="element">p</xsl:with-param>
+                    <xsl:with-param name="class">p-in-sp</xsl:with-param>
+                    <xsl:with-param name="content">
+                        <xsl:if test="$numberParagraphs='true'">
+                            <xsl:call-template name="numberParagraph"/>
+                        </xsl:if>
+                        <xsl:apply-templates/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -219,11 +222,11 @@ of this software, even if advised of the possibility of such damage.
         <desc>Process element stage</desc>
     </doc>
     <xsl:template match="tei:stage">
-        <xsl:element name="{if (not(tei:is-inline(.)) or *[not(tei:is-inline(.))]) then 'div' else 'span' }">
+        <xsl:element name="{if (not(tei:isInline(.)) or *[not(tei:isInline(.))]) then 'div' else 'span' }">
             <xsl:call-template name="makeRendition">
                 <xsl:with-param name="default">
                     <xsl:choose>
-                        <xsl:when test="ancestor::tei:text/@rend='firstfolio'">stage</xsl:when>
+                        <xsl:when test="ancestor::tei:text[tei:match(@rend,'firstfolio')]">stage</xsl:when>
                         <xsl:otherwise>stage it</xsl:otherwise>
                     </xsl:choose>
                 </xsl:with-param>

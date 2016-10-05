@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,7 +37,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -46,7 +45,19 @@ of this software, even if advised of the possibility of such damage.
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>Process element anchor</desc>
     </doc>
-    <xsl:template match="tei:anchor">
+    <!-- xsl:template match="tei:anchor">
         <xsl:call-template name="makeAnchor"/>
+    </xsl:template -->
+    <xsl:template match="tei:anchor">
+        <span>
+            <xsl:attribute name="id">
+                <xsl:value-of select="@xml:id"/>
+            </xsl:attribute>
+        </span>
     </xsl:template>
+    <xsl:template match="tei:body//text()">
+                    <span class="hover-text">
+                        <xsl:value-of select="translate(., ' ', '&#160;')"/>
+                    </span>
+                </xsl:template>
 </xsl:stylesheet>

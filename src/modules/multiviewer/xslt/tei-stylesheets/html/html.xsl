@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns="http://www.w3.org/1999/xhtml" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:teidocx="http://www.tei-c.org/ns/teidocx/1.0" xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:teix="http://www.tei-c.org/ns/Examples" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:rng="http://relaxng.org/ns/structure/1.0" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:fo="http://www.w3.org/1999/XSL/Format" exclude-result-prefixes="#all" version="2.0">
+<xsl:stylesheet xmlns="http://www.w3.org/1999/xhtml" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:teidocx="http://www.tei-c.org/ns/teidocx/1.0" xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns:teix="http://www.tei-c.org/ns/Examples" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:rng="http://relaxng.org/ns/structure/1.0" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:fo="http://www.w3.org/1999/XSL/Format" exclude-result-prefixes="#all" version="2.0">
     <xsl:import href="../common/common.xsl"/>
     <xsl:import href="../common/verbatim.xsl"/>
     <xsl:import href="html_param.xsl"/>
@@ -15,7 +15,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -41,7 +41,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -62,7 +61,6 @@ of this software, even if advised of the possibility of such damage.
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" type="string">
         <desc>Stylesheet constant setting the name of the main output file.</desc>
     </doc>
-    <xsl:variable name="top" select="/"/>
     <xsl:variable name="masterFile">
         <xsl:choose>
             <xsl:when test="not($outputName ='')">
@@ -151,11 +149,11 @@ of this software, even if advised of the possibility of such damage.
         <xsl:param name="auto"/>
         <xsl:call-template name="makeLang"/>
         <xsl:choose>
-            <xsl:when test="(self::tei:q or self::tei:said or         self::tei:quote) and (@rend='inline' or         @rend='display') and         not(@rendition) and not(key('TAGREND',local-name(.)))">
+            <xsl:when test="(self::tei:q or self::tei:said or         self::tei:quote) and (tei:match(@rend,'inline') or         tei:match(@rend,'display')) and         not(@rendition) and not(key('TAGREND',local-name(.)))">
                 <xsl:sequence select="tei:processClass(local-name(),'')"/>
             </xsl:when>
             <xsl:when test="@rend">
-                <xsl:sequence select="tei:processRend(@rend,$auto)"/>
+                <xsl:sequence select="tei:processRend(@rend,$auto,.)"/>
             </xsl:when>
             <xsl:when test="@rendition or @style">
                 <xsl:for-each select="@rendition">
@@ -199,13 +197,16 @@ of this software, even if advised of the possibility of such damage.
         <xsl:attribute name="class">
             <xsl:if test="not($auto='')">
                 <xsl:value-of select="$auto"/>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:if>
             <xsl:variable name="values">
                 <xsl:for-each select="tokenize(normalize-space($value),' ')">
                     <xsl:choose>
                         <xsl:when test="starts-with(.,'#')">
                             <xsl:sequence select="substring-after(.,'#')"/>
+                        </xsl:when>
+                        <xsl:when test="starts-with(.,'simple:')">
+                            <xsl:value-of select="substring(.,8)"/>
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:for-each select="document(.)">
@@ -228,6 +229,7 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:processRend" as="node()*">
         <xsl:param name="value"/>
         <xsl:param name="auto"/>
+        <xsl:param name="context"/>
         <xsl:variable name="values">
             <values xmlns="">
                 <xsl:if test="not($auto='')">
@@ -235,11 +237,13 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:value-of select="$auto"/>
                     </c>
                 </xsl:if>
+                <xsl:for-each select="tokenize($context/@style,';')">
+                    <s>
+                        <xsl:value-of select="."/>
+                    </s>
+                </xsl:for-each>
                 <xsl:for-each select="tokenize(normalize-space($value),' ')">
                     <xsl:choose>
-                        <xsl:when test=".='bold' or .='bo'">
-                            <s>font-weight:bold</s>
-                        </xsl:when>
                         <xsl:when test=".='calligraphic' or .='cursive'">
                             <s>font-family:cursive</s>
                         </xsl:when>
@@ -254,9 +258,6 @@ of this software, even if advised of the possibility of such damage.
                         </xsl:when>
                         <xsl:when test=".='indent'">
                             <s>text-indent: 5em</s>
-                        </xsl:when>
-                        <xsl:when test=".='italics' or .='italic' or .='it' or .='ital'">
-                            <s>font-style: italic</s>
                         </xsl:when>
                         <xsl:when test=".='large'">
                             <s>font-size: 130%</s>
@@ -283,12 +284,12 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:when test=".='spaced'">
                             <s>letter-spacing: 0.15em</s>
                         </xsl:when>
-                        <xsl:when test=".='strike' or .='striked'">
-                            <s>text-decoration: line-through</s>
-                        </xsl:when>
                         <xsl:when test=".='sub' or .='sup' or .='code' or .='superscript' or .='subscript'"/>
-                        <xsl:when test=".='ul' or .='underline'">
-                            <s>text-decoration:underline</s>
+                        <xsl:when test="starts-with(.,'background(')">
+                            <s>
+                                <xsl:text>background-color:</xsl:text>
+                                <xsl:value-of select="substring-before(substring-after(.,'('),')')"/>
+                            </s>
                         </xsl:when>
                         <xsl:when test="starts-with(.,'align(')">
                             <s>
@@ -306,7 +307,19 @@ of this software, even if advised of the possibility of such damage.
                             <xsl:message terminate="yes">no support for post() pattern in @rend</xsl:message>
                         </xsl:when>
                         <xsl:when test="starts-with(.,'pre(')">
-                            <xsl:message terminate="yes">no support for pre() pattern in @rend</xsl:message>
+                            <xsl:message terminate="yes">no support for pre() pattern in  @rend</xsl:message>
+                        </xsl:when>
+                        <xsl:when test=".='bold' or . ='b'">
+                            <s>font-weight:bold</s>
+                        </xsl:when>
+                        <xsl:when test=".='italic' or .='i'">
+                            <s>font-style:italic</s>
+                        </xsl:when>
+                        <xsl:when test=".='strikethrough' or .='strike'">
+                            <s>text-decoration: line-through</s>
+                        </xsl:when>
+                        <xsl:when test=".='underline'">
+                            <s>text-decoration:underline</s>
                         </xsl:when>
                         <xsl:otherwise>
                             <c>
@@ -344,15 +357,16 @@ of this software, even if advised of the possibility of such damage.
     should be (ie plain &lt;p&gt; or &lt;div class="p"&gt; if the
     content is complex).</desc>
     </doc>
-    <xsl:function name="tei:is-DivOrP" as="node()*">
+    <xsl:function name="tei:isDivOrP" as="node()*">
         <xsl:param name="element"/>
         <xsl:for-each select="$element">
             <xsl:choose>
                 <xsl:when test="tei:specList">div</xsl:when>
+                <xsl:when test="parent::tei:note[@place='display']">div</xsl:when>
+                <xsl:when test="parent::tei:note[@place='block']">div</xsl:when>
                 <xsl:when test="parent::tei:figure and (tei:q/tei:l or tei:figure or parent::tei:figure/parent::tei:div)">div</xsl:when>
                 <xsl:when test="ancestor::tei:notesStmt">div</xsl:when>
                 <xsl:when test="tei:table">div</xsl:when>
-                <xsl:when test="parent::tei:note[not(@place or @rend)]">span</xsl:when>
                 <xsl:when test="$outputTarget='epub' or $outputTarget='epub3'">div</xsl:when>
                 <xsl:when test="tei:eg">div</xsl:when>
                 <xsl:when test="tei:figure">div</xsl:when>
@@ -360,19 +374,18 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:when test="tei:l">div</xsl:when>
                 <xsl:when test="tei:list">div</xsl:when>
                 <xsl:when test="tei:moduleSpec">div</xsl:when>
-                <xsl:when test="tei:note[@place='display']">div</xsl:when>
-                <xsl:when test="tei:note[@place='margin']">div</xsl:when>
+                <xsl:when test="tei:note[@place='display'  or @place='block' or tei:isMarginal(@place)]">div</xsl:when>
                 <xsl:when test="tei:note[tei:q]">div</xsl:when>
                 <xsl:when test="tei:q/tei:figure">div</xsl:when>
                 <xsl:when test="tei:q/tei:list">div</xsl:when>
-                <xsl:when test="tei:q[@rend='display']">div</xsl:when>
-                <xsl:when test="tei:q[@rend='inline' and tei:note/@place]">div</xsl:when>
+                <xsl:when test="tei:q[tei:match(@rend,'display')]">div</xsl:when>
+                <xsl:when test="tei:q[tei:match(@rend,'inline') and tei:note/@place]">div</xsl:when>
                 <xsl:when test="tei:q[tei:l]">div</xsl:when>
                 <xsl:when test="tei:q[tei:lg]">div</xsl:when>
                 <xsl:when test="tei:q[tei:p]">div</xsl:when>
                 <xsl:when test="tei:q[tei:sp]">div</xsl:when>
                 <xsl:when test="tei:q[tei:floatingText]">div</xsl:when>
-                <xsl:when test="tei:quote[not(tei:is-inline(.))]">div</xsl:when>
+                <xsl:when test="tei:quote[not(tei:isInline(.))]">div</xsl:when>
                 <xsl:when test="tei:specGrp">div</xsl:when>
                 <xsl:when test="tei:specGrpRef">div</xsl:when>
                 <xsl:when test="tei:specList">div</xsl:when>
@@ -399,7 +412,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:attribute name="class">
             <xsl:if test="not($auto='')">
                 <xsl:value-of select="$auto"/>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:if>
             <xsl:value-of select="$value"/>
         </xsl:attribute>
@@ -436,7 +449,7 @@ of this software, even if advised of the possibility of such damage.
     </doc>
     <xsl:template name="makeBlock">
         <xsl:param name="style"/>
-        <xsl:element name="{if (tei:is-inline(.)) then 'span' else 'div'}">
+        <xsl:element name="{if (tei:isInline(.)) then 'span' else 'div'}">
             <xsl:call-template name="microdata"/>
             <xsl:call-template name="makeRendition">
                 <xsl:with-param name="default" select="$style"/>
@@ -484,7 +497,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:value-of select="normalize-space(.)"/>
     </xsl:template>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
-        <desc>Process any element and work out a unique identififying string</desc>
+        <desc>Process any element and work out a unique identifying string</desc>
     </doc>
     <xsl:template match="*" mode="ident">
         <xsl:variable name="BaseFile">
@@ -603,9 +616,7 @@ of this software, even if advised of the possibility of such damage.
                     </xsl:choose>
                 </xsl:otherwise>
             </xsl:choose>
-        </xsl:variable>
-
-      <!--
+        </xsl:variable><!--
       <xsl:message>GENERATELINK <xsl:value-of
       select="(name(),$ident,$depth,string($keep),$LINK)"
 	  separator="|"/></xsl:message>
@@ -684,7 +695,7 @@ of this software, even if advised of the possibility of such damage.
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>Process extra elements in generateLink mode</desc>
     </doc>
-    <xsl:template match="tei:label|tei:figure|tei:table|tei:item|tei:p|tei:title|tei:bibl|tei:anchor|tei:cell|tei:lg|tei:list|tei:sp" mode="generateLink">
+    <xsl:template match="tei:label|tei:figure|tei:table|tei:item|tei:p|tei:title|tei:bibl|tei:cell|tei:lg|tei:list|tei:sp" mode="generateLink">
         <xsl:variable name="ident">
             <xsl:apply-templates mode="ident" select="."/>
         </xsl:variable>
@@ -806,17 +817,12 @@ of this software, even if advised of the possibility of such damage.
     <xsl:function name="tei:keepDivOnPage" as="xs:boolean">
         <xsl:param name="context"/>
         <xsl:for-each select="$context">
-            <xsl:choose>
-	<!-- 4. we are part of an inner text -->
-                <xsl:when test="ancestor::tei:floatingText">true</xsl:when>
-	<!-- 3. we have special rendering on the document -->
-                <xsl:when test="ancestor::tei:TEI/@rend='all'     or ancestor::tei:TEI/@rend='frontpage'     or ancestor::tei:TEI/@rend='nosplit'">true</xsl:when>
-	<!-- 2. we are a singleton -->
-                <xsl:when test="parent::tei:body[count(*)=1] and not(tei:div or    tei:div2)">true</xsl:when>
-	<!-- 1. we have no proceding sections at top level -->
-                <xsl:when test="not(ancestor::tei:group) and parent::tei:body and    not(parent::tei:body/preceding-sibling::tei:front)    and not (preceding-sibling::*)">true</xsl:when>
-	<!-- 0. we are down the hierarchy -->
-                <xsl:when test="@rend='nosplit'">true</xsl:when>
+            <xsl:choose><!-- 4. we are part of an inner text -->
+                <xsl:when test="ancestor::tei:floatingText">true</xsl:when><!-- 3. we have special rendering on the document -->
+                <xsl:when test="ancestor::tei:TEI/tei:match(@rend,'all')     or ancestor::tei:TEI/tei:match(@rend,'frontpage')     or ancestor::tei:TEI/tei:match(@rend,'nosplit')">true</xsl:when><!-- 2. we are a singleton -->
+                <xsl:when test="parent::tei:body[count(*)=1] and not(tei:div or    tei:div2)">true</xsl:when><!-- 1. we have no proceding sections at top level -->
+                <xsl:when test="not(ancestor::tei:group) and parent::tei:body and    not(parent::tei:body/preceding-sibling::tei:front)    and not (preceding-sibling::*)">true</xsl:when><!-- 0. we are down the hierarchy -->
+                <xsl:when test="tei:match(@rend,'nosplit')">true</xsl:when>
                 <xsl:otherwise>false</xsl:otherwise>
             </xsl:choose>
         </xsl:for-each>

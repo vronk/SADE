@@ -10,7 +10,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -36,7 +36,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -227,10 +226,7 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:apply-templates/>
             </xsl:otherwise>
         </xsl:choose>
-    </xsl:template>
-
-
-   <!-- authors and editors -->
+    </xsl:template><!-- authors and editors -->
     <xsl:template match="tei:editor|tei:author">
         <xsl:choose>
             <xsl:when test="ancestor::tei:bibl">
@@ -258,8 +254,7 @@ of this software, even if advised of the possibility of such damage.
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-    <xsl:template match="tei:author|tei:editor" mode="mla">
-     <!-- <xsl:variable name="totalNbr">
+    <xsl:template match="tei:author|tei:editor" mode="mla"><!-- <xsl:variable name="totalNbr">
 	  <xsl:number select="ancestor::tei:listBibl"/>
         </xsl:variable>
         <xsl:value-of select="$totalNbr"/>. 
@@ -303,7 +298,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:author, ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -315,7 +310,7 @@ of this software, even if advised of the possibility of such damage.
                         </xsl:if>
                     </xsl:otherwise>
                 </xsl:choose>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:when>
             <xsl:when test="self::tei:author and following-sibling::tei:author">
                 <xsl:choose>
@@ -327,7 +322,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:author, ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                                 <xsl:text>, and </xsl:text>
                             </xsl:when>
@@ -357,7 +352,7 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:choose>
                     <xsl:when test="contains(self::tei:editor[@role='translator'], ',')">
                         <xsl:value-of select="substring-after(., ',')"/>
-                        <xsl:text> </xsl:text>
+                        <xsl:text/>
                         <xsl:value-of select="substring-before(., ',')"/>
                     </xsl:when>
                     <xsl:otherwise>
@@ -378,7 +373,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:apply-templates/>
                         <xsl:choose>
                             <xsl:when test="position() + 1 = last()">
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <xsl:text>, </xsl:text>
@@ -389,7 +384,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -398,7 +393,7 @@ of this software, even if advised of the possibility of such damage.
                         </xsl:choose>
                         <xsl:choose>
                             <xsl:when test="position() + 1 = last()">
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <xsl:text>, </xsl:text>
@@ -412,7 +407,7 @@ of this software, even if advised of the possibility of such damage.
                                 <xsl:choose>
                                     <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                         <xsl:value-of select="substring-after(., ',')"/>
-                                        <xsl:text> </xsl:text>
+                                        <xsl:text/>
                                         <xsl:value-of select="substring-before(., ',')"/>
                                     </xsl:when>
                                     <xsl:otherwise>
@@ -442,7 +437,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -456,7 +451,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -482,7 +477,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -491,7 +486,7 @@ of this software, even if advised of the possibility of such damage.
                         </xsl:choose>
                         <xsl:choose>
                             <xsl:when test="position() + 1 = last()">
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <xsl:text>, </xsl:text>
@@ -502,7 +497,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -515,7 +510,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:choose>
                             <xsl:when test="contains(self::tei:editor[@role='editor'], ',')">
                                 <xsl:value-of select="substring-after(., ',')"/>
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                                 <xsl:value-of select="substring-before(., ',')"/>
                             </xsl:when>
                             <xsl:otherwise>
@@ -524,7 +519,7 @@ of this software, even if advised of the possibility of such damage.
                         </xsl:choose>
                         <xsl:choose>
                             <xsl:when test="position() + 1 = last()">
-                                <xsl:text> </xsl:text>
+                                <xsl:text/>
                             </xsl:when>
                             <xsl:otherwise>
                                 <xsl:text>, </xsl:text>
@@ -535,11 +530,9 @@ of this software, even if advised of the possibility of such damage.
             </xsl:when>
         </xsl:choose>
     </xsl:template>
-    <xsl:template match="tei:nameLink"/>
-
-   <!-- title  -->
+    <xsl:template match="tei:nameLink"/><!-- title  -->
     <xsl:template match="tei:title" mode="simple">
-        <xsl:value-of select="."/>
+        <xsl:apply-templates select="text()"/>
     </xsl:template>
     <xsl:template match="tei:title">
         <xsl:choose>
@@ -584,7 +577,9 @@ of this software, even if advised of the possibility of such damage.
                 </xsl:call-template>
                 <xsl:if test="following-sibling::* and     (ancestor::tei:biblStruct  or ancestor::tei:biblFull)">
                     <xsl:call-template name="makeText">
-                        <xsl:with-param name="letters"/>
+                        <xsl:with-param name="letters">
+                            <xsl:text/>
+                        </xsl:with-param>
                     </xsl:call-template>
                 </xsl:if>
             </xsl:when>
@@ -597,11 +592,13 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:apply-templates/>
                     </xsl:with-param>
                 </xsl:call-template>
-                <xsl:call-template name="makeText">
-                    <xsl:with-param name="letters">
-                        <xsl:text> </xsl:text>
-                    </xsl:with-param>
-                </xsl:call-template>
+                <xsl:if test="ancestor::tei:biblStruct or ancestor::tei:biblFull">
+                    <xsl:call-template name="makeText">
+                        <xsl:with-param name="letters">
+                            <xsl:text/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:if>
             </xsl:when>
             <xsl:when test="@level='a'">
                 <xsl:call-template name="emphasize">
@@ -632,8 +629,7 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:with-param name="letters">. </xsl:with-param>
                     </xsl:call-template>
                 </xsl:if>
-            </xsl:when>
-<!--
+            </xsl:when><!--
          <xsl:when test="ancestor::tei:bibl">
 	   <xsl:apply-templates/>
          </xsl:when>
@@ -661,7 +657,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:if test="following-sibling::* and (ancestor::tei:biblStruct  or ancestor::tei:biblFull)">
             <xsl:call-template name="makeText">
                 <xsl:with-param name="letters">
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:if>
@@ -669,8 +665,7 @@ of this software, even if advised of the possibility of such damage.
     <xsl:template match="tei:series">
         <xsl:apply-templates/>
     </xsl:template>
-    <xsl:template match="tei:biblStruct//tei:date|tei:biblFull//tei:date">
-     <!--
+    <xsl:template match="tei:biblStruct//tei:date|tei:biblFull//tei:date"><!--
 	 <xsl:choose>
 	 <xsl:when test="starts-with(.,'$Date:')">
 	 <xsl:value-of select="substring-before(substring-after(.,'$Date:'),'$')"/>
@@ -716,9 +711,7 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:with-param name="letters">. </xsl:with-param>
             </xsl:call-template>
         </xsl:if>
-    </xsl:template>
-
-   <!-- details and notes -->
+    </xsl:template><!-- details and notes -->
     <xsl:template match="tei:biblScope">
         <xsl:variable name="Unit" select="(@unit|@type)[1]"/>
         <xsl:choose>
@@ -791,21 +784,21 @@ of this software, even if advised of the possibility of such damage.
             <xsl:when test="$Unit='vol' and      following-sibling::tei:biblScope[$Unit='issue']">
                 <xsl:call-template name="makeText">
                     <xsl:with-param name="letters">
-                        <xsl:text> </xsl:text>
+                        <xsl:text/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
             <xsl:when test="$Unit='vol' and following-sibling::tei:biblScope">
                 <xsl:call-template name="makeText">
                     <xsl:with-param name="letters">
-                        <xsl:text> </xsl:text>
+                        <xsl:text/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
             <xsl:when test="following-sibling::tei:biblScope">
                 <xsl:call-template name="makeText">
                     <xsl:with-param name="letters">
-                        <xsl:text> </xsl:text>
+                        <xsl:text/>
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
@@ -816,18 +809,20 @@ of this software, even if advised of the possibility of such damage.
             </xsl:when>
         </xsl:choose>
     </xsl:template>
-    <xsl:template match="tei:name|tei:persName|tei:placeName">
+    <xsl:template match="tei:name|tei:persName|tei:placeName|tei:orgName">
         <xsl:choose>
-            <xsl:when test="not(ancestor::tei:person|ancestor::tei:biblStruct)">
+            <xsl:when test="ancestor::tei:person|ancestor::tei:biblStruct">
                 <xsl:call-template name="makeSpan"/>
-            </xsl:when>
-            <xsl:when test="following-sibling::tei:name|following-sibling::tei:persName">
-                <xsl:call-template name="makeText">
-                    <xsl:with-param name="letters">, </xsl:with-param>
-                </xsl:call-template>
+                <xsl:if test="following-sibling::*[1][self::tei:name|self::tei:persName]">
+                    <xsl:call-template name="makeText">
+                        <xsl:with-param name="letters">, </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:if>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:call-template name="makeSpan"/>
+                <xsl:call-template name="makeInline">
+                    <xsl:with-param name="style" select="local-name()"/>
+                </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -932,10 +927,20 @@ of this software, even if advised of the possibility of such damage.
                     <xsl:with-param name="letters">)</xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
+            <xsl:when test="tokenize(@place,' ')=('sup','above')">
+                <xsl:call-template name="makeInline">
+                    <xsl:with-param name="style">sup</xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:when test="tokenize(@place,' ')=('sub','below')">
+                <xsl:call-template name="makeInline">
+                    <xsl:with-param name="style">sub</xsl:with-param>
+                </xsl:call-template>
+            </xsl:when>
             <xsl:when test="@place='comment'">
                 <xsl:call-template name="commentNote"/>
             </xsl:when>
-            <xsl:when test="@place='inline' and not(tei:is-inline(.))">
+            <xsl:when test="@place='inline' and not(tei:isInline(.))">
                 <xsl:call-template name="displayNote"/>
             </xsl:when>
             <xsl:when test="@place='inline'">
@@ -947,15 +952,16 @@ of this software, even if advised of the possibility of such damage.
             <xsl:when test="tei:isFootNote(.)">
                 <xsl:call-template name="footNote"/>
             </xsl:when>
-            <xsl:when test="@place='margin' or          @place='margin/inline' or         @place='marg1' or         @place='marg2' or         @place='marg3' or         @place='marge' or         @place='h' or         @place='inter' or         @place='divend' or         @place='marginOuter' or         @place='marginLeft' or         @place='marginRight' or         @place='margin-left' or         @place='margin-right' or         @place='margin_left' or         @place='margin_right' or         @place='margin-top' or         @place='margin-bottom'         ">
+            <xsl:when test="tei:isMarginal(@place)">
                 <xsl:call-template name="marginalNote"/>
             </xsl:when>
-            <xsl:when test="(@place='display' or not(tei:is-inline(.)) or tei:q)">
+            <xsl:when test="not(tei:isInline(.)) or tei:q">
                 <xsl:call-template name="displayNote"/>
             </xsl:when>
             <xsl:when test="@place">
-                <xsl:message terminate="yes">unknown @place for note, <xsl:value-of select="@place"/>
+                <xsl:message>WARNING: unknown @place for note, <xsl:value-of select="@place"/>
                 </xsl:message>
+                <xsl:call-template name="displayNote"/>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:call-template name="plainNote"/>
@@ -993,17 +999,17 @@ of this software, even if advised of the possibility of such damage.
     </xsl:template>
     <xsl:template match="tei:bibl">
         <xsl:choose>
-            <xsl:when test="parent::tei:cit[@rend='display'] or         (parent::tei:cit and tei:p) or  parent::tei:q[tei:is-inline(.)]">
+            <xsl:when test="parent::tei:cit[tei:match(@rend,'display')] or         (parent::tei:cit and tei:p) or  parent::tei:q[tei:isInline(.)]">
                 <xsl:call-template name="makeInline">
                     <xsl:with-param name="style">citbibl</xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
-            <xsl:when test="parent::tei:q/parent::tei:head or parent::tei:q[@rend='inline']">
+            <xsl:when test="parent::tei:q/parent::tei:head or parent::tei:q[tei:match(@rend,'inline')]">
                 <xsl:call-template name="makeBlock">
                     <xsl:with-param name="style">citbibl</xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
-            <xsl:when test="not(tei:is-inline(.))">
+            <xsl:when test="not(tei:isInline(.))">
                 <xsl:call-template name="makeBlock">
                     <xsl:with-param name="style">biblfree</xsl:with-param>
                 </xsl:call-template>
@@ -1070,7 +1076,7 @@ of this software, even if advised of the possibility of such damage.
     </doc>
     <xsl:template match="tei:head" mode="plain">
         <xsl:if test="preceding-sibling::tei:head">
-            <xsl:text> </xsl:text>
+            <xsl:text/>
         </xsl:if>
         <xsl:apply-templates mode="plain"/>
     </xsl:template>
@@ -1087,7 +1093,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:choose>
             <xsl:when test="@type='hyphenInWord'"/>
             <xsl:otherwise>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -1109,33 +1115,38 @@ of this software, even if advised of the possibility of such damage.
     </doc>
     <xsl:template match="tei:lb">
         <xsl:choose>
-            <xsl:when test="parent::tei:div"/>
-            <xsl:when test="@type='hyphenInWord' and @rend='hidden'"/>
-            <xsl:when test="@rend='hidden'">
-                <xsl:text> </xsl:text>
+            <xsl:when test="@type='hyphenInWord' and tei:match(@rend,'hidden')"/>
+            <xsl:when test="tei:match(@rend,'hidden')">
+                <xsl:text/>
             </xsl:when>
-            <xsl:when test="@rend='-' or @type='hyphenInWord'">
+            <xsl:when test="tei:match(@rend,'-') or @type='hyphenInWord'">
                 <xsl:text>-</xsl:text>
                 <xsl:call-template name="lineBreak"/>
             </xsl:when>
-            <xsl:when test="@rend='above'">
+            <xsl:when test="tei:match(@rend,'above')">
                 <xsl:text>⌜</xsl:text>
             </xsl:when>
-            <xsl:when test="@rend='below'">
+            <xsl:when test="tei:match(@rend,'below')">
                 <xsl:text>⌞</xsl:text>
             </xsl:when>
-            <xsl:when test="not(tei:is-inline(..)) and (tei:is-last(.) or         tei:is-first(.))"/>
-            <xsl:when test="@rend='show'">
+            <xsl:when test="not(tei:isInline(..)) and (tei:isLast(.) or         tei:isFirst(.))"/>
+            <xsl:when test="tei:match(@rend,'show')">
                 <xsl:call-template name="lineBreak"/>
             </xsl:when>
-            <xsl:when test="not(tei:is-inline(..)) and (tei:is-last(.) or tei:is-first(.))"/>
+            <xsl:when test="tei:match(@rend,'paragraph')">
+                <xsl:call-template name="lineBreakAsPara"/>
+            </xsl:when>
+            <xsl:when test="not(tei:isInline(..)) and (tei:isLast(.) or tei:isFirst(.))"/>
             <xsl:otherwise>
                 <xsl:call-template name="lineBreak"/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
     <xsl:template name="lineBreak">
-        <xsl:text> </xsl:text>
+        <xsl:text/>
+    </xsl:template>
+    <xsl:template name="lineBreakAsPara">
+        <xsl:text/>
     </xsl:template>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>Process forename</desc>
@@ -1155,11 +1166,15 @@ of this software, even if advised of the possibility of such damage.
         <xsl:if test="parent::*/tei:forename">
             <xsl:for-each select="parent::*/tei:forename">
                 <xsl:apply-templates/>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:for-each>
         </xsl:if>
         <xsl:apply-templates/>
     </xsl:template>
+    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
+        <desc>abbreviation marker and expansion inside expan</desc>
+    </doc>
+    <xsl:template match="tei:expan/tei:am"/>
     <xsl:template match="tei:expan/tei:ex">
         <xsl:call-template name="makeInline">
             <xsl:with-param name="before">(</xsl:with-param>
@@ -1234,7 +1249,7 @@ of this software, even if advised of the possibility of such damage.
                     <xsl:with-param name="style">sub</xsl:with-param>
                 </xsl:call-template>
             </xsl:when>
-            <xsl:when test="not(tei:is-inline(*[last()]))">
+            <xsl:when test="not(tei:isInline(*[last()]))">
                 <xsl:call-template name="makeBlock">
                     <xsl:with-param name="style">add</xsl:with-param>
                 </xsl:call-template>
@@ -1249,22 +1264,35 @@ of this software, even if advised of the possibility of such damage.
         </xsl:choose>
     </xsl:template>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
+        <desc>Process element label</desc>
+    </doc>
+    <xsl:template match="tei:label">
+        <xsl:call-template name="makeInline">
+            <xsl:with-param name="style" select="@type"/>
+        </xsl:call-template>
+    </xsl:template>
+    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>processing milestone elements</desc>
     </doc>
     <xsl:template match="tei:milestone">
         <xsl:choose>
-            <xsl:when test="@rend='hr'">
+            <xsl:when test="tei:match(@rend,'hr')">
                 <xsl:call-template name="horizontalRule"/>
             </xsl:when>
             <xsl:when test="@unit='line'">
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:text>☛</xsl:text>
-                <xsl:value-of select="@unit"/>
-                <xsl:text> </xsl:text>
-                <xsl:value-of select="@n"/>
-                <xsl:text>☚</xsl:text>
+                <xsl:call-template name="makeInline">
+                    <xsl:with-param name="style" select="@type"/>
+                    <xsl:with-param name="before">
+                        <xsl:if test="not(@unit='unspecified')">
+                            <xsl:value-of select="@unit"/>
+                            <xsl:text/>
+                        </xsl:if>
+                    </xsl:with-param>
+                    <xsl:with-param name="after" select="@n"/>
+                </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
@@ -1278,9 +1306,9 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:if test="count(preceding-sibling::tei:docAuthor)&gt;1">
                     <xsl:text>,</xsl:text>
                 </xsl:if>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
                 <xsl:sequence select="tei:i18n('and')"/>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:when>
             <xsl:when test="following-sibling::tei:docAuthor">
                 <xsl:text>, </xsl:text>
@@ -1291,15 +1319,15 @@ of this software, even if advised of the possibility of such damage.
         <desc>Process element author in "author" mode"</desc>
     </doc>
     <xsl:template match="tei:author" mode="author">
-        <xsl:apply-templates select="*[not(self::tei:email)]|text()"/>
+        <xsl:apply-templates select="*[not(self::tei:email or self::tei:affiliation)]|text()"/>
         <xsl:choose>
             <xsl:when test="count(following-sibling::tei:author)=1">
                 <xsl:if test="count(preceding-sibling::tei:author)&gt;1">
                     <xsl:text>,</xsl:text>
                 </xsl:if>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
                 <xsl:sequence select="tei:i18n('and')"/>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
             </xsl:when>
             <xsl:when test="following-sibling::tei:author">, </xsl:when>
         </xsl:choose>

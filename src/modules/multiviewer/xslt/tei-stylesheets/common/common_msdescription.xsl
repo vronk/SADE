@@ -10,7 +10,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -36,13 +36,9 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
-    </doc>
-
-
-  <!-- headings -->
+    </doc><!-- headings -->
     <xsl:template match="tei:accMat">
         <xsl:call-template name="makeSection">
             <xsl:with-param name="level">2</xsl:with-param>
@@ -250,8 +246,7 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:text>Text editions</xsl:text>
             </xsl:with-param>
         </xsl:call-template>
-    </xsl:template>
-  <!-- inline -->
+    </xsl:template><!-- inline -->
     <xsl:template match="tei:textLang">
         <xsl:choose>
             <xsl:when test="preceding-sibling::tei:summary"/>
@@ -285,7 +280,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:if test="preceding-sibling::tei:*">
             <xsl:call-template name="makeText">
                 <xsl:with-param name="letters">
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:if>
@@ -295,7 +290,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:if test="preceding-sibling::tei:*">
             <xsl:call-template name="makeText">
                 <xsl:with-param name="letters">
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:if>
@@ -305,7 +300,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:if test="preceding-sibling::tei:*">
             <xsl:call-template name="makeText">
                 <xsl:with-param name="letters">
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:if>
@@ -362,8 +357,7 @@ of this software, even if advised of the possibility of such damage.
                 </xsl:with-param>
             </xsl:call-template>
         </xsl:if>
-    </xsl:template>
-  <!--
+    </xsl:template><!--
     <handNote scribe="AM_544_4to_1"
     script="carolingian-insular minuscule"
     medium="ink" scope="sole"> 
@@ -373,9 +367,9 @@ of this software, even if advised of the possibility of such damage.
             <xsl:variable name="Notes">
                 <tei:list type="ordered">
                     <xsl:for-each select="../tei:handNote">
-                        <item>
+                        <tei:item>
                             <xsl:copy-of select="*|text()"/>
-                        </item>
+                        </tei:item>
                     </xsl:for-each>
                 </tei:list>
             </xsl:variable>

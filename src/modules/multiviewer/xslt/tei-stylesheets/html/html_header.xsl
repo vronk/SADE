@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,12 +37,11 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
-    <xsl:key name="ALL-EXTRENDITION" match="@rendition[not(starts-with(.,'#'))]" use="1"/>
-    <xsl:key name="EXTRENDITION" match="@rendition[not(starts-with(.,'#'))]" use="."/>
+    <xsl:key name="ALL-EXTRENDITION" match="@rendition[not(starts-with(.,'simple:') or starts-with(.,'#'))]" use="1"/>
+    <xsl:key name="EXTRENDITION" match="@rendition[not(starts-with(.,'simple:') or starts-with(.,'#'))]" use="."/>
     <xsl:key name="ALL-LOCALRENDITION" match="tei:rendition" use="1"/>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>Process element teiHeader</desc>
@@ -68,8 +67,7 @@ of this software, even if advised of the possibility of such damage.
                     <xsl:text>
 }</xsl:text>
                 </xsl:for-each>
-                <xsl:text>
-</xsl:text>
+                <xsl:text/>
             </style>
         </xsl:if>
         <xsl:if test="key('ALL-EXTRENDITION',1)">
@@ -127,8 +125,7 @@ of this software, even if advised of the possibility of such damage.
             </xsl:choose>
         </xsl:variable>
         <xsl:if test="preceding-sibling::tei:catRef">
-            <xsl:text> 
-    </xsl:text>
+            <xsl:text/>
         </xsl:if>
         <em>
             <xsl:value-of select="@scheme"/>
@@ -149,7 +146,7 @@ of this software, even if advised of the possibility of such damage.
         </xsl:variable>
         <xsl:if test="not($realauthor = '')">
             <p class="mainAuthor">
-                <xsl:text> </xsl:text>
+                <xsl:text/>
                 <xsl:sequence select="tei:i18n('authorWord')"/>
                 <xsl:text>: </xsl:text>
                 <xsl:copy-of select="$realauthor"/>
@@ -159,7 +156,7 @@ of this software, even if advised of the possibility of such damage.
             <p class="mainRevAuthor">
                 <xsl:text> (</xsl:text>
                 <xsl:sequence select="tei:i18n('revisedWord')"/>
-                <xsl:text> </xsl:text>
+                <xsl:text/>
                 <xsl:copy-of select="$revauthor"/>
                 <xsl:text>)</xsl:text>
             </p>

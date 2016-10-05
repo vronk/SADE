@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,7 +37,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -57,7 +56,7 @@ of this software, even if advised of the possibility of such damage.
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="layout" type="string">
         <desc>which Javascript library to use for drawing trees</desc>
     </doc>
-    <xsl:param name="treestyle">google</xsl:param>
+    <xsl:param name="treestyle">googlechart</xsl:param>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="CSS" type="string">
         <desc>  CSS class for links derived from &lt;ptr&gt;    </desc>
     </doc>
@@ -103,7 +102,7 @@ so that it does not affect printing. It should be used for screen layout.</desc>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="CSS" type="anyURI">
         <desc>CSS file to include in the output file directly</desc>
     </doc>
-    <xsl:param name="cssInlineFile" as="xs:string" select="''"/>
+    <xsl:param name="cssInlineFiles" as="xs:string" select="''"/>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="figures" type="integer">
         <desc>Resolution of images. This is needed to calculate
 HTML width and height (in pixels) from supplied dimensions.</desc>
@@ -141,13 +140,11 @@ HTML width and height (in pixels) from supplied dimensions.</desc>
             <p>This would be used to insert &lt;meta&gt; tags.</p>
         </desc>
     </doc>
-    <xsl:template name="headHook">
-    <!--
+    <xsl:template name="headHook"><!--
     <link href="/favicon.ico" rel="icon" type="image/x-icon"/>
     <link href="/favicon.ico" rel="shortcut icon"
 	  type="image/x-icon"/>
-    -->
-    </xsl:template>
+    --></xsl:template>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="hook">
         <desc>[html] Hook where HTML can be inserted when creating an &lt;img&gt;</desc>
     </doc>
@@ -284,10 +281,6 @@ will generate an &lt;h2&gt;</p>
         <xsl:call-template name="searchbox"/>
         <xsl:call-template name="printLink"/>
     </xsl:template>
-    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="layout" type="string">
-        <desc>Width of left-hand column when $pageLayout is "Table"</desc>
-    </doc>
-    <xsl:param name="linksWidth">15%</xsl:param>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="layout">
         <desc>[html] Logo</desc>
     </doc>
@@ -500,6 +493,11 @@ of &lt;item&gt; elements, each containing an &lt;xref&gt; link.</p>
     </doc>
     <xsl:param name="showTitleAuthor">false</xsl:param>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="misc" type="boolean">
+        <desc>Add a comment to web page showing when it was generated,
+      stylesheet version, etc</desc>
+    </doc>
+    <xsl:param name="generationComment">true</xsl:param>
+    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="misc" type="boolean">
         <desc>Be talkative while working.</desc>
     </doc>
     <xsl:param name="verbose">false</xsl:param>
@@ -664,12 +662,6 @@ correspond to the ID attribute of the &gt;div&lt;. Alternatively, you
         <desc>URL to link back to from foot of ODD reference pages</desc>
     </doc>
     <xsl:param name="refDocFooterURL">index.html</xsl:param>
-    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="toc" type="boolean">
-        <desc>When a TEI &lt;p&gt; generates an HTML &lt;p&gt; (possibly
-      split) or a &lt;div class="p"&gt;
-  </desc>
-    </doc>
-    <xsl:param name="generateDivFromP">false</xsl:param>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="toc" type="anyURI">
         <desc>Gap between elements in navigation list</desc>
     </doc>
@@ -701,7 +693,8 @@ correspond to the ID attribute of the &gt;div&lt;. Alternatively, you
     <xsl:param name="mediaoverlay">false</xsl:param>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>[html] break up a block content (h1, p etc) so that it
-    breaks around nested  HTML blocks</desc>
+    breaks around nested  HTML blocks, and turns nested asides
+    into spans</desc>
     </doc>
     <xsl:template name="splitHTMLBlocks">
         <xsl:param name="copyid">true</xsl:param>
@@ -736,11 +729,71 @@ correspond to the ID attribute of the &gt;div&lt;. Alternatively, you
                         <xsl:if test="position()=1">
                             <xsl:copy-of select="$ID/html:tmp2/@*"/>
                         </xsl:if>
-                        <xsl:copy-of select="current-group()"/>
+                        <xsl:apply-templates select="current-group()" mode="copyhtml"/>
                     </xsl:element>
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:for-each-group>
+    </xsl:template>
+    <xsl:template match="@rowspan|@colspan|@class" mode="copyhtml"/>
+    <xsl:template match="comment()|@*|processing-instruction()|text()" mode="copyhtml">
+        <xsl:copy-of select="."/>
+    </xsl:template>
+    <xsl:template match="*" mode="copyhtml">
+        <xsl:copy>
+            <xsl:copy-of select="@class"/>
+            <xsl:apply-templates select="@*|*|processing-instruction()|comment()|text()" mode="copyhtml"/>
+        </xsl:copy>
+    </xsl:template>
+    <xsl:template match="html:blockquote|html:dt|html:dd|html:aside|html:h1|html:h2|html:h3|html:h4|html:h5|html:h6|html:div|html:p|html:pre|html:figure" mode="copyhtml">
+        <span style="display:block">
+            <xsl:attribute name="class">
+                <xsl:value-of select="(@class, local-name())"/>
+            </xsl:attribute>
+            <xsl:apply-templates select="@*|*|processing-instruction()|comment()|text()" mode="copyhtml"/>
+        </span>
+    </xsl:template>
+    <xsl:template match="html:ol" mode="copyhtml">
+        <span style="list-style-type:decimal;margin-left: 40px ; display:    block">
+            <xsl:attribute name="class">
+                <xsl:value-of select="(@class, local-name())"/>
+            </xsl:attribute>
+            <xsl:apply-templates select="@*|*|processing-instruction()|comment()|text()" mode="copyhtml"/>
+        </span>
+    </xsl:template>
+    <xsl:template match="html:dl" mode="copyhtml">
+        <span class="{local-name()}" style="margin-left: 40px ; display: block">
+            <xsl:apply-templates select="@*|*|processing-instruction()|comment()|text()" mode="copyhtml"/>
+        </span>
+    </xsl:template>
+    <xsl:template match="html:ul" mode="copyhtml">
+        <span class="{local-name()}" style="margin-left: 40px ; display:block">
+            <xsl:attribute name="class">
+                <xsl:value-of select="(@class, local-name())"/>
+            </xsl:attribute>
+            <xsl:apply-templates select="@*|*|processing-instruction()|comment()|text()" mode="copyhtml"/>
+        </span>
+    </xsl:template>
+    <xsl:template match="html:table|html:tr|html:thead|html:tbody|html:td|html:th|html:caption|html:li" mode="copyhtml">
+        <span>
+            <xsl:attribute name="class">
+                <xsl:value-of select="(@class, local-name())"/>
+            </xsl:attribute>
+            <xsl:attribute name="style">
+                <xsl:text>display:</xsl:text>
+                <xsl:choose>
+                    <xsl:when test="local-name()='table'">table</xsl:when>
+                    <xsl:when test="local-name()='tr'">table-row</xsl:when>
+                    <xsl:when test="local-name()='thead'">table-header-group</xsl:when>
+                    <xsl:when test="local-name()='tbody'">table-row-group</xsl:when>
+                    <xsl:when test="local-name()='td'">table-cell</xsl:when>
+                    <xsl:when test="local-name()='th'">table-cell</xsl:when>
+                    <xsl:when test="local-name()='caption'">table-caption</xsl:when>
+                    <xsl:when test="local-name()='li'">list-item</xsl:when>
+                </xsl:choose>
+            </xsl:attribute>
+            <xsl:apply-templates select="@*|*|processing-instruction()|comment()|text()" mode="copyhtml"/>
+        </span>
     </xsl:template>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
         <desc>[html] show an XML element in a verbatim context</desc>

@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,7 +37,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -66,7 +65,8 @@ of this software, even if advised of the possibility of such damage.
     <xsl:template match="tei:cell">
         <xsl:variable name="cellname">
             <xsl:choose>
-                <xsl:when test="parent::tei:row[@rend='thead']">th</xsl:when>
+                <xsl:when test="parent::tei:row[tei:match(@rend,'thead')]">th</xsl:when>
+                <xsl:when test="parent::tei:row[@role='label' and not(preceding::tei:row)]">th</xsl:when>
                 <xsl:otherwise>td</xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
@@ -106,7 +106,7 @@ of this software, even if advised of the possibility of such damage.
                             <xsl:value-of select="."/>
                         </xsl:attribute>
                     </xsl:when>
-                    <xsl:when test="name(.)='align'">
+                    <xsl:when test="local-name(.)='align'">
                         <xsl:attribute name="align">
                             <xsl:value-of select="."/>
                         </xsl:attribute>
@@ -132,7 +132,7 @@ of this software, even if advised of the possibility of such damage.
                     <xsl:value-of select="@role"/>
                 </xsl:attribute>
             </xsl:if>
-            <xsl:if test="ancestor::tei:table/@rend='rules' and not(@rend)">
+            <xsl:if test="ancestor::tei:table[tei:match(@rend,'rules')] and not(@rend)">
                 <xsl:attribute name="style">
                     <xsl:text>border: 1px solid black; padding: 2px;</xsl:text>
                 </xsl:attribute>
@@ -160,14 +160,14 @@ of this software, even if advised of the possibility of such damage.
     </doc>
     <xsl:template match="tei:figure">
         <xsl:choose>
-            <xsl:when test="@rend='inline' or @place='inline'">
+            <xsl:when test="tei:match(@rend,'inline') or @place='inline'">
                 <xsl:apply-templates/>
             </xsl:when>
             <xsl:when test="parent::tei:hi/parent::tei:date or parent::tei:ref or parent::tei:label">
                 <xsl:apply-templates/>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:element name="{if ($outputTarget='html5') then 'figure'       else if (tei:is-inline(.)) then 'span'       else 'div'}">
+                <xsl:element name="{if ($outputTarget='html5') then 'figure'       else if (tei:isInline(.)) then 'span'       else 'div'}">
                     <xsl:call-template name="makeRendition">
                         <xsl:with-param name="auto">figure</xsl:with-param>
                     </xsl:call-template>
@@ -263,7 +263,7 @@ of this software, even if advised of the possibility of such damage.
             <xsl:attribute name="class">
                 <xsl:text>table</xsl:text>
                 <xsl:if test="@align">
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                     <xsl:value-of select="@align"/>
                 </xsl:if>
             </xsl:attribute>
@@ -274,7 +274,7 @@ of this software, even if advised of the possibility of such damage.
                 <xsl:call-template name="makeRendition">
                     <xsl:with-param name="default">false</xsl:with-param>
                 </xsl:call-template>
-                <xsl:if test="@rend='frame' or @rend='rules'">
+                <xsl:if test="tei:match(@rend,'frame') or tei:match(@rend,'rules')">
                     <xsl:attribute name="style">border-collapse:collapse;border-spacing:0;</xsl:attribute>
                 </xsl:if>
                 <xsl:for-each select="@*">
@@ -288,12 +288,20 @@ of this software, even if advised of the possibility of such damage.
                     </caption>
                 </xsl:if>
                 <xsl:choose>
-                    <xsl:when test="tei:row[@rend='thead']">
+                    <xsl:when test="tei:row[tei:match(@rend,'thead')]">
                         <thead>
-                            <xsl:apply-templates select="tei:row[@rend='thead']"/>
+                            <xsl:apply-templates select="tei:row[tei:match(@rend,'thead')]"/>
                         </thead>
                         <tbody>
-                            <xsl:apply-templates select="tei:row[not(@rend='thead')]"/>
+                            <xsl:apply-templates select="tei:row[not(tei:match(@rend,'thead'))]"/>
+                        </tbody>
+                    </xsl:when>
+                    <xsl:when test="tei:row[@role='label' and not(preceding::tei:row)]">
+                        <thead>
+                            <xsl:apply-templates select="tei:row[@role='label' and not(preceding::tei:row)]"/>
+                        </thead>
+                        <tbody>
+                            <xsl:apply-templates select="tei:row[not(@role='label' and not(preceding::tei:row))]"/>
                         </tbody>
                     </xsl:when>
                     <xsl:otherwise>
@@ -305,9 +313,9 @@ of this software, even if advised of the possibility of such damage.
         </div>
     </xsl:template>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl">
-        <desc>Process element table[@rend='simple']</desc>
+        <desc>Process element table[tei:match(@rend,'simple')]</desc>
     </doc>
-    <xsl:template match="tei:table[@rend='simple']">
+    <xsl:template match="tei:table[tei:match(@rend,'simple')]">
         <table>
             <xsl:call-template name="makeRendition">
                 <xsl:with-param name="default">false</xsl:with-param>
@@ -444,11 +452,11 @@ of this software, even if advised of the possibility of such damage.
             <xsl:otherwise>
                 <div class="altfigure">
                     <xsl:sequence select="tei:i18n('figureWord')"/>
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                     <xsl:for-each select="self::tei:figure|parent::tei:figure">
                         <xsl:number count="tei:figure[tei:head]" level="any"/>
                     </xsl:for-each>
-                    <xsl:text> </xsl:text>
+                    <xsl:text/>
                     <xsl:value-of select="$File"/>
                     <xsl:text> [</xsl:text>
                     <xsl:value-of select="$Alt"/>
@@ -471,7 +479,7 @@ of this software, even if advised of the possibility of such damage.
     </doc>
     <xsl:template match="tei:formula[m:math]">
         <xsl:choose>
-            <xsl:when test="@xml:id and (@rend='display' or    @rend='equation' or @rend='subeqn')">
+            <xsl:when test="@xml:id and (tei:match(@rend,'display') or    tei:match(@rend,'equation') or tei:match(@rend,'subeqn'))">
                 <div id="{@xml:id}">
                     <xsl:apply-templates select="m:math" mode="math"/>
                 </div>

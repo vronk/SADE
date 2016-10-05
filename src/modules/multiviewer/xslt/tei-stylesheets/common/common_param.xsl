@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" exclude-result-prefixes="m tei xsi sch" version="2.0">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:tei="http://www.tei-c.org/ns/1.0" xmlns:m="http://www.w3.org/1998/Math/MathML" xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" exclude-result-prefixes="#all" version="2.0">
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" scope="stylesheet" type="stylesheet">
         <desc>
             <p>TEI stylesheet customization module, common for all output
@@ -11,7 +11,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -37,7 +37,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -98,7 +97,7 @@ of this software, even if advised of the possibility of such damage.
     section header</desc>
     </doc>
     <xsl:param name="numberSpacer">
-        <xsl:text> </xsl:text>
+        <xsl:text/>
     </xsl:param>
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="links" type="string">
         <desc>Name of department within institution</desc>
@@ -300,8 +299,7 @@ of this software, even if advised of the possibility of such damage.
         <desc>[common] Hook where actions can be inserted when making
      a heading</desc>
     </doc>
-    <xsl:template name="sectionHeadHook"/>
-  <!-- Addition by Martin Holmes 2012-07-15 for ticket http://purl.org/tei/fr/3511134     -->
+    <xsl:template name="sectionHeadHook"/><!-- Addition by Martin Holmes 2012-07-15 for ticket http://purl.org/tei/fr/3511134     -->
     <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="hook">
         <desc>[common] Hook where actions can be inserted when processing an 
     attDef Used in Guidelines output to create an anchor/link pilcrow.</desc>
@@ -310,4 +308,8 @@ of this software, even if advised of the possibility of such damage.
         <xsl:param name="attName"/>
     </xsl:template>
     <xsl:param name="langAttributeName">xml:lang</xsl:param>
+    <doc xmlns="http://www.oxygenxml.com/ns/doc/xsl" class="string">
+        <desc>[common] whether specDesc output is verbose</desc>
+    </doc>
+    <xsl:param name="verboseSpecDesc">false</xsl:param>
 </xsl:stylesheet>

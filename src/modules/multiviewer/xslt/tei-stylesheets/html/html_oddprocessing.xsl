@@ -15,7 +15,7 @@ Unported License http://creativecommons.org/licenses/by-sa/3.0/
 
 2. http://www.opensource.org/licenses/BSD-2-Clause
 		
-All rights reserved.
+
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -41,7 +41,6 @@ theory of liability, whether in contract, strict liability, or tort
 of this software, even if advised of the possibility of such damage.
 </p>
             <p>Author: See AUTHORS</p>
-            <p>Id: $Id$</p>
             <p>Copyright: 2013, TEI Consortium</p>
         </desc>
     </doc>
@@ -130,9 +129,9 @@ of this software, even if advised of the possibility of such damage.
                         <xsl:variable name="pagetitle">
                             <xsl:text>TEI </xsl:text>
                             <xsl:value-of select="substring-before(local-name(),'Spec')"/>
-                            <xsl:text> </xsl:text>
+                            <xsl:text/>
                             <xsl:value-of select="$name"/>
-                            <xsl:text> </xsl:text>
+                            <xsl:text/>
                             <xsl:sequence select="tei:makeGloss(.,$langs)"/>
                         </xsl:variable>
                         <xsl:sequence select="tei:htmlHead($pagetitle,7)"/>
@@ -192,7 +191,7 @@ of this software, even if advised of the possibility of such damage.
                     <xsl:call-template name="verbatim-reformatText">
                         <xsl:with-param name="sofar">0</xsl:with-param>
                         <xsl:with-param name="indent">
-                            <xsl:text> </xsl:text>
+                            <xsl:text/>
                         </xsl:with-param>
                         <xsl:with-param name="text">
                             <xsl:value-of select="$contents"/>
@@ -261,7 +260,7 @@ of this software, even if advised of the possibility of such damage.
             <param name="element">element</param>
         </desc>
     </doc>
-    <xsl:template name="bitOut">
+    <xsl:template name="schemaOut">
         <xsl:param name="grammar"/>
         <xsl:param name="content"/>
         <xsl:param name="element">pre</xsl:param>
@@ -319,10 +318,10 @@ of this software, even if advised of the possibility of such damage.
         </xsl:choose>
     </xsl:template>
     <xsl:template name="showSpace">
-        <xsl:text> </xsl:text>
+        <xsl:text/>
     </xsl:template>
     <xsl:template name="showSpaceBetweenItems">
-        <xsl:text> </xsl:text>
+        <xsl:text/>
     </xsl:template>
     <xsl:template match="tei:schemaSpec">
         <xsl:choose>
@@ -350,7 +349,7 @@ of this software, even if advised of the possibility of such damage.
         <xsl:choose>
             <xsl:when test="$summaryDoc='true'">
                 <h2>Schema <xsl:value-of select="@ident"/>: changed components</h2>
-                <xsl:for-each select="tei:classSpec[@mode or @rend='change']        | tei:macroSpec[(@mode or @rend='change')]        | tei:elementSpec[(@mode or @rend='change')]">
+                <xsl:for-each select="tei:classSpec[@mode='change' or tei:match(@rend,'change')]        | tei:macroSpec[(@mode='change' or tei:match(@rend,'change'))]        | tei:elementSpec[(@mode='change' or tei:match(@rend,'change'))]">
                     <xsl:sort select="lower-case(@ident)"/>
                     <xsl:apply-templates mode="weave" select="."/>
                 </xsl:for-each>
@@ -789,7 +788,7 @@ of this software, even if advised of the possibility of such damage.
                 </xsl:attribute>
                 <xsl:value-of select="@ident"/>
             </a>
-            <xsl:text> </xsl:text>
+            <xsl:text/>
         </span>
     </xsl:template>
     <xsl:template match="tei:divGen[@type='modelclasscat']" priority="100">
