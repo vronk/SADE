@@ -56,7 +56,7 @@
         <copy todir="${exist.dist}/autodeploy">
             <fileset dir="${exist.dest}/autodeploy/" includes="*.xar"/>
             <fileset dir="${sade.src}/build" includes="*.xar"/>
-          <!--   <fileset dir="${markdown.dest}/build" includes="*.xar"/> -->
+            <fileset dir="${markdown.dest}/build" includes="*.xar"/>
         </copy>
         <!-- add bin/sade.sh symlink for backwards compatibility / does not work with tar / zip-->
         <!--symlink link="${exist.dist}/bin/sade.sh" resource="../tools/wrapper/bin/exist.sh"/>
@@ -182,7 +182,7 @@
         <ant antfile="${markdown.dest}/build.xml" inheritAll="false" />
     </target>
 
-    <target name="exist-git" depends="ant-dependencies">
+<target name="exist-git" depends="ant-dependencies">
         <!-- TODO: use http://ant.apache.org/manual/properties.html#if+unless -->
         <if>
           <available file="${exist.dest}" type="dir" />
