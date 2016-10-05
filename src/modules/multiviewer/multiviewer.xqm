@@ -149,6 +149,7 @@ declare function mviewer:choose-xsl-and-transform($doc, $model as map(*)) {
             $xslconf/@location
     
     let $xsl := doc($xslloc)
+    let $xsl:= if(not($xsl/*)) then doc('xslt/tei-stylesheets/html/html.xsl') else $xsl
     let $html := transform:transform($doc, $xsl, $xslconf/parameters)
     
     return $html
