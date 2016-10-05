@@ -2,7 +2,7 @@
 <config type="module">
     <module key="multiviewer">
         <param key="xslt">
-            <stylesheet namespace="http://www.tei-c.org/ns/1.0" location="xslt/TEI-Stylesheets/html/html.xsl">
+            <stylesheet namespace="http://www.tei-c.org/ns/1.0" location="xslt/tei-stylesheets/html/html.xsl">
                 <parameters>
                     <param name="graphicsPrefix" value="http://localhost:8080/digilib"/>
                     <param name="graphicsSuffix" value="?dw=10"/>
@@ -12,6 +12,6 @@
     </module>
     <container key="html-head">
         /* added by multiviewer-imodule */
-        <script type="text/css" src="modules/multiviewer/stylesheets/tg-tei.css"/>
+        <!-- script type="text/css" src="modules/multiviewer/stylesheets/tg-tei.css"/ -->
     </container>
 </config>
