@@ -41,7 +41,7 @@ declare function dsk-t:transcription($tei as element(tei:TEI), $type as xs:strin
 let $xslt := 
                 if ($tei//tei:title[1] = 'Bellifortis')
                     then doc($projectdir || '/xslt/SemToNotes-Bellifortis-'|| $type ||'.xslt')
- else doc('/db/apps/SADE/modules/multiviewer/xslt/TEI-Stylesheets/html/html.xsl')
+ else doc('/db/apps/SADE/modules/multiviewer/xslt/tei-stylesheets/html/html.xsl')
 (: a class="a1_start" muss zu span werden!  :)
 
 return
