@@ -20,8 +20,8 @@
     <property name="exist.dest" value="${build.dir}/exist-git"/>
     <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.2"/>
     <property name="sade.src" value="../../"/>
-    <!-- <property name="markdown.git" value="https://github.com/wolfgangmm/exist-markdown.git"/> -->
-    <!--  <property name="markdown.dest" value="${build.dir}/exist-markdown"/> -->
+    <property name="markdown.git" value="https://github.com/wolfgangmm/exist-markdown.git"/>
+    <property name="markdown.dest" value="${build.dir}/exist-markdown"/>
 
     <property name="sade.tgz.file" value="${build.dir}/sade.tar.gz"/>
     <property name="tgsade.tgz.file" value="${build.dir}/sade-textgrid.tar.gz"/>
@@ -29,8 +29,8 @@
     <property name="tg.defp.dest" value="${build.dir}/sade-textgrid-default-project"/>
     <property name="tg.sadeconnect.dest" value="${build.dir}/textgrid-sade-connector"/>
 
-   <!--  <target name="build" depends="exist-git,markdown"> -->
-   <target name="build" depends="exist-git">
+   <target name="build" depends="exist-git,markdown">
+   <!--<target name="build" depends="exist-git">-->
         <echo message="building eXist"/>
 
         <!-- add some more xar packages to autodeploy --> 
@@ -162,7 +162,7 @@
         <ant antfile="${tg.sadeconnect.dest}/build.xml" inheritAll="false" />
     </target>
 
-   <!-- <target name="markdown" depends="ant-dependencies">
+   <target name="markdown" depends="ant-dependencies">
         <if>
           <available file="${markdown.dest}" type="dir" />
           <then>
@@ -180,7 +180,7 @@
         </if>
         <echo message="packaging markdown.xar"/>
         <ant antfile="${markdown.dest}/build.xml" inheritAll="false" />
-    </target> -->
+    </target>
 
     <target name="exist-git" depends="ant-dependencies">
         <!-- TODO: use http://ant.apache.org/manual/properties.html#if+unless -->
