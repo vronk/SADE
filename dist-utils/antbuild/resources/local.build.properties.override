@@ -17,7 +17,7 @@ build.compiler=modern
 build.compiler.source=1.7
 build.compiler.target=1.7
 
-autodeploy=dashboard,shared,eXide,monex,markdown,functx
+autodeploy=dashboard,shared,eXide,monex,functx
 autodeploy.repo=http://demo.exist-db.org/exist/apps/public-repo
 use.autodeploy.feature=true
 
