@@ -43,9 +43,11 @@ return
  <a>{($module, ($params[3] = $modules))}</a>
 else:)
 if ($exist:path eq "/" or $rel-path eq "/") then
-    (: forward root (project) path to index.html :)
+    (: forward root (project) path to index.html 
+    for textgrid we avoid the old SADE main page and go directly to the textgrid projects index.html
+    :)
     <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
-        <redirect url="index.html"/>
+        <redirect url="textgrid/index.html"/>
     </dispatch>
 else      
 (: else
@@ -127,7 +129,13 @@ else if ($file-type = $web-resources) then
                     <add-parameter name="path" value="{substring-after($path, '/facs/')}"/>
                 </forward>
             </dispatch>
-            
+        (: use shared resources from exist if requested with /$shared/ :)
+        else if (contains($path, "/$shared/")) then
+            <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
+                <forward url="/shared-resources/{substring-after($exist:path, '/$shared/')}">
+                    <set-header name="Cache-Control" value="max-age=3600, must-revalidate"/>
+                </forward>
+            </dispatch>               
         else
         <dispatch xmlns="http://exist.sourceforge.net/NS/exist">
             <forward url="{$path}" />        

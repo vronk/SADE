@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+    basedir="."
+    default="build"
+    name="SADE"
+    xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:git="antlib:com.rimerosolutions.ant.git">
+
+    <property name="build.dir" value="${basedir}/build"/>
+    <property name="resources.dir" value="${basedir}/resources"/>
+
+    <property name="ivy.install.version" value="2.3.0"/>
+    <property name="ivy.jar.dir" value="${basedir}/lib"/>
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
+
+    <property name="exist.git" value="https://github.com/eXist-db/exist.git"/>
+    <property name="exist.tag" value="eXist-2.2"/>
+<!--    <property name="exist.branch" value="00db4c3d9538337b705f7f30c98ba4a54bf05227" /> -->
+
+    <property name="exist.dest" value="${build.dir}/exist-git"/>
+    <property name="exist.dist" value="${exist.dest}/dist/eXist-db-2.2"/>
+    <property name="sade.src" value="../../"/>
+    <property name="markdown.xar.version" value="0.4"/>
+
+    <property name="sade.tgz.file" value="${build.dir}/sade.tar.gz"/>
+    <property name="tgsade.tgz.file" value="${build.dir}/sade-textgrid.tar.gz"/>
+
+    <property name="tg.defp.dest" value="${build.dir}/sade-textgrid-default-project"/>
+    <property name="tg.sadeconnect.dest" value="${build.dir}/textgrid-sade-connector"/>
+
+   <target name="build" depends="exist-git">
+   <!--<target name="build" depends="exist-git">-->
+        <echo message="building eXist"/>
+
+        <!-- add some more xar packages to autodeploy --> 
+        <copy file="${resources.dir}/local.build.properties.override" tofile="${exist.dest}/build.properties" />
+        
+        <!-- include cqlparser in build-->
+        <copy file="${resources.dir}/exist.extension.properties.override" tofile="${exist.dest}/extensions/local.build.properties" />
+
+        <antcall target="existBuild"/>
+
+        <!-- include cqlparser in conf.xml -->
+        <replace file="${exist.dist}/conf.xml">
+                <replacetoken>&lt;module uri="http://exist-db.org/xquery/cqlparser"           class="org.exist.xquery.modules.cqlparser.CQLParserModule" /&gt;</replacetoken>
+                <replacevalue>--&gt; &lt;module uri="http://exist-db.org/xquery/cqlparser"           class="org.exist.xquery.modules.cqlparser.CQLParserModule" /&gt; &lt;!--</replacevalue>
+        </replace>
+        <!-- former patch, now replaced <patch patchfile="${resources.dir}/conf.xml.cqlparser.patch" originalfile="${exist.dist}/conf.xml" ignorewhitespace="true" failonerror="true" /> -->
+
+
+        <echo message="building and integrating SADE"/>
+        <ant antfile="${sade.src}/build.xml" inheritAll="false" />
+        <!-- add xar files to autodeploy -->
+        <mkdir dir="${exist.dist}/autodeploy"/>
+        <copy todir="${exist.dist}/autodeploy">
+            <fileset dir="${exist.dest}/autodeploy/" includes="*.xar"/>
+            <fileset dir="${sade.src}/build" includes="*.xar"/>
+        </copy>
+    	  <get src="http://demo.exist-db.org/exist/apps/public-repo/public/markdown-${markdown.xar.version}.xar"
+    		  dest="${exist.dist}/autodeploy/markdown-${markdown.xar.version}.xar"/>
+        <!-- add bin/sade.sh symlink for backwards compatibility / does not work with tar / zip-->
+        <!--symlink link="${exist.dist}/bin/sade.sh" resource="../tools/wrapper/bin/exist.sh"/>
+        <symlink link="${exist.dist}/bin/sade.bat" resource="../tools/wrapper/bin/exist.bat"/-->
+
+        <antcall target="tgz" />
+        <antcall target="textgrid-tgz" />
+
+    </target>
+
+    <target name="existBuild">
+       <!-- get updated xars to autodeploy dir -->
+       <delete dir="${exist.dest}/autodeploy" />
+       <java classname="org.apache.tools.ant.launch.Launcher" fork="true">
+         <arg value="-Dant.home=${exist.dest}/tools/ant"/>
+         <arg value="-Dant.library.dir=${exist.dest}/tools/ant/lib"/>
+         <arg value="-Divy.default.ivy.user.dir=${basedir}/ivy" />
+         <arg value="-Djavax.xml.transform.TransformerFactory=org.apache.xalan.processor.TransformerFactoryImpl"/>
+         <arg value="-f"/>
+         <arg value="${exist.dest}/build.xml"/>
+         <arg value="all"/>
+         <arg value="dist"/>
+         <classpath>
+           <pathelement location="${exist.dest}/tools/ant/lib/ant-launcher.jar"/>
+           <!--pathelement path="${java.class.path}"/-->
+         </classpath>
+       </java>
+    </target>
+
+    <target name="tgz">
+        <delete file="${sade.tgz.file}" />
+        <delete dir="${build.dir}/sade" />
+        <move file="${exist.dist}" toFile="${build.dir}/sade" />
+        <tar destfile="${sade.tgz.file}" compression="gzip" longfile="gnu">
+            <tarfileset dir="${build.dir}" filemode="755">
+                <include name="sade/**/*.sh"/>
+                <include name="sade/tools/wrapper/bin/**"/>
+            </tarfileset>
+            <tarfileset dir="${build.dir}" includes="sade/**">
+                <exclude name="sade/**/*.sh"/>
+                <exclude name="sade/tools/wrapper/bin/**" />
+                <!--exclude name="sade/extensions/**" />
+                <exclude name="sade/src/**" /-->
+            </tarfileset>
+        </tar>
+    </target>
+
+    <target name="textgrid-tgz" depends="textgrid-default-project,textgrid-sade-connector">
+        <delete file="${tgsade.tgz.file}" />
+        <!--delete dir="${build.dir}/sade" /-->
+        <!--move file="${exist.dist}" toFile="${build.dir}/sade" /-->
+        <move file="${tg.sadeconnect.dest}/build/textgrid-connect-0.1.xar" toFile="${build.dir}/sade/autodeploy/textgrid-connect-0.1.xar" />
+        <move file="${tg.defp.dest}/build/sade-textgrid-default-project.xar" toFile="${build.dir}/sade/autodeploy/sade-textgrid-default-project.xar" />
+        <tar destfile="${tgsade.tgz.file}" compression="gzip" longfile="gnu">
+            <tarfileset dir="${build.dir}" filemode="755">
+                <include name="sade/**/*.sh"/>
+                <include name="sade/tools/wrapper/bin/**"/>
+            </tarfileset>
+            <tarfileset dir="${build.dir}" includes="sade/**">
+                <exclude name="sade/**/*.sh"/>
+                <exclude name="sade/tools/wrapper/bin/**" />
+                <!--exclude name="sade/extensions/**" />
+                <exclude name="sade/src/**" /-->
+            </tarfileset>
+        </tar>
+    </target>
+
+    <target name="textgrid-default-project" depends="ant-dependencies">
+        <if>
+            <available file="${tg.defp.dest}" type="dir" />
+            <then>
+                <delete dir="${tg.defp.dest}"/>
+            </then>
+        </if>
+
+        <echo message="cloning https://github.com/ubbo/sade-textgrid-default-project.git" />
+        <git:git directory="${tg.defp.dest}" verbose="false">
+            <git:clone uri="https://github.com/ubbo/sade-textgrid-default-project.git" />
+        </git:git>
+
+        <echo message="packaging sade-textgrid-default-project.xar" />
+        <ant antfile="${tg.defp.dest}/build.xml" inheritAll="false" />
+    </target>
+
+    <target name="textgrid-sade-connector" depends="ant-dependencies">
+        <if>
+          <available file="${tg.sadeconnect.dest}" type="dir" />
+          <then>
+            <echo message="updating tg-sade-connector git repository" />
+            <git:git directory="${tg.sadeconnect.dest}" verbose="false">
+                 <git:pull />
+            </git:git>
+          </then>
+          <else>
+            <echo message="cloning https://github.com/ubbo/textgrid-sade-connector.git"/>
+            <git:git directory="${tg.sadeconnect.dest}" verbose="false">
+                 <git:clone uri="https://github.com/ubbo/textgrid-sade-connector.git"/>
+            </git:git>
+          </else>
+        </if>
+        <echo message="packaging textgrid-sade-connector.xar"/>
+        <ant antfile="${tg.sadeconnect.dest}/build.xml" inheritAll="false" />
+    </target>
+
+    <target name="exist-git" depends="ant-dependencies">
+        <!-- TODO: use http://ant.apache.org/manual/properties.html#if+unless -->
+        <if>
+          <available file="${exist.dest}" type="dir" />
+
+          <then>
+            <echo message="updating exist git repository" />
+            <git:git directory="${exist.dest}" verbose="false">
+                 <!-- <git:checkout branchName="${exist.branch}" /> -->
+                 <git:checkout branchName="${exist.tag}" />
+                 <!-- todo: pull does not (and does not need to) work with detached branch -->
+                 <!-- <git:pull /> -->
+            </git:git>
+          </then>
+
+          <else>
+            <echo message="cloning exist git repository"/>
+            <git:git directory="${exist.dest}" verbose="false">
+                 <git:clone uri="${exist.git}"/>
+                 <!-- <git:checkout branchName="${exist.branch}" /> -->
+                 <git:checkout branchName="${exist.tag}" />
+            </git:git>
+
+          </else>
+        </if>
+    </target>
+
+    <target name="ant-dependencies" depends="install-ivy">
+        <property name="ivy.default.ivy.user.dir" value="${basedir}/ivy"/>
+        <ivy:retrieve conf="tasks" />
+        <path id="classpath">
+            <fileset dir="./lib">
+                <include name="*.jar"/>
+            </fileset>
+        </path>
+        <!-- git -->
+        <taskdef uri="antlib:com.rimerosolutions.ant.git"
+                 resource="com/rimerosolutions/ant/git/jgit-ant-lib.xml"
+                 classpathref="classpath"/>
+        <!-- contrib has if -->
+        <taskdef resource="net/sf/antcontrib/antcontrib.properties" classpathref="classpath" />
+    </target>
+
+    <target name="download-ivy" unless="skip.download">
+    	<mkdir dir="${ivy.jar.dir}"/>
+    	<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+    		 dest="${ivy.jar.file}" usetimestamp="true"/>
+    </target>
+
+    <target name="install-ivy" depends="download-ivy" description="--> install ivy">
+    	<path id="ivy.lib.path">
+    	    <pathelement location="${ivy.jar.file}"/>
+    	</path>
+    	<taskdef resource="org/apache/ivy/ant/antlib.xml"
+    	          uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+    </target>
+
+</project>

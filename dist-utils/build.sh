@@ -61,19 +61,20 @@ shift `expr $OPTIND - 1`
 JETTY_VERSION=8.0.4.v20111024
 
 # digilib (setting "tip" as changeset gets head revision)
-DIGILIB_CHANGESET=f2ac01ddebf1
+#DIGILIB_CHANGESET=f2ac01ddebf1
+DIGILIB_CHANGESET=e5281d63f03f
 DIGILIB_LOC=http://hg.berlios.de/repos/digilib/archive/$DIGILIB_CHANGESET.tar.bz2
 
 # tomcat
-TOMCAT_VERSION=7.0.37
+TOMCAT_VERSION=7.0.47
 
 # exist
 #EXIST_BRANCH=stable/eXist-2.0.x    # exist 2.0
 #EXIST_SRC_LOC=exist-2.0
-EXIST_BRANCH=trunk/eXist           # eXist 2.1
-EXIST_SRC_LOC=exist-2.0
+EXIST_BRANCH=develop               # one of develop, master (stable), exist-2.0.x
+EXIST_SRC_LOC=exist-git
 #EXIST_REV=-1					   # revision to check out -1 means head
-EXIST_REV=18252
+#EXIST_REV=18252
 
 
 # Create build directory
@@ -171,35 +172,44 @@ BUILD_EXIST=true
 
 if [ ! -e $BUILDLOC/$EXIST_SRC_LOC ]; then
 	# exist rev < 0 means head
-	if [ $EXIST_REV -lt 0 ]; then
-		svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH $EXIST_SRC_LOC
-	else
-    	svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH -r $EXIST_REV $EXIST_SRC_LOC
-	fi
+	#if [ $EXIST_REV -lt 0 ]; then
+		#svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH $EXIST_SRC_LOC
+        git clone https://github.com/eXist-db/exist.git $EXIST_SRC_LOC
+        cd $EXIST_SRC_LOC
+        git checkout $EXIST_BRANCH
+	#else
+    	#svn co http://svn.code.sf.net/p/exist/code/$EXIST_BRANCH -r $EXIST_REV $EXIST_SRC_LOC
+    #    git clone https://github.com/eXist-db/exist.git $EXIST_SRC_LOC
+	#fi
 else 
-    LOCAL_EXIST_REV=`LANG=C svn info $EXIST_SRC_LOC |grep Revision | awk '{print $2}'`
+    cd $EXIST_SRC_LOC
+    git pull
+    git checkout $EXIST_BRANCH
+    #LOCAL_EXIST_REV=`LANG=C svn info $EXIST_SRC_LOC |grep Revision | awk '{print $2}'`
 	# exist rev < 0 means head
-	if [ $EXIST_REV -lt 0 ]; then
-		svn up $EXIST_SRC_LOC
-	else
-	    if [ $EXIST_REV != $LOCAL_EXIST_REV ]; then
-    	    svn up -r $EXIST_REV $EXIST_SRC_LOC
-		else
-		    # revision did not change, and exist*.war is in place no need to rebuild
-		    if [ -e $BUILDLOC/$EXIST_SRC_LOC/dist/exist*.war ];then
-		        echo "[SADE BUILD] found already build exist.war with correct revision"
-		        BUILD_EXIST=false
-		    fi
-		fi
-	fi
+	#if [ $EXIST_REV -lt 0 ]; then
+	#	svn up $EXIST_SRC_LOC
+	#else
+	#    if [ $EXIST_REV != $LOCAL_EXIST_REV ]; then
+    #	    svn up -r $EXIST_REV $EXIST_SRC_LOC
+	#	else
+	#	    # revision did not change, and exist*.war is in place no need to rebuild
+	#	    if [ -e $BUILDLOC/$EXIST_SRC_LOC/dist/exist*.war ];then
+	#	        echo "[SADE BUILD] found already build exist.war with correct revision"
+	#	        BUILD_EXIST=false
+	#	    fi
+	#	fi
+	#fi
 fi
 
 if [ $BUILD_EXIST == true ]; then
     echo "[SADE BUILD] building eXist"
     # we want xslfo, a diff/patch may be better than sed here
-    sed -i 's/include.module.xslfo = false/include.module.xslfo = true/g' $EXIST_SRC_LOC/extensions/build.properties
+    cp extensions/build.properties extensions/local.build.properties
+    #sed -i 's/include.module.xslfo = false/include.module.xslfo = true/g' $EXIST_SRC_LOC/extensions/local.build.properties
+    sed -i 's/include.module.cqlparser = false/include.module.cqlparser = true/g' extensions/local.build.properties
 
-    cd $EXIST_SRC_LOC
+#    cd $EXIST_SRC_LOC
 #      show svn rev (does not work with svn 1.7)
 #    ./build.sh svn-download    
 #    do we really need to clean build dir? time demanding...
@@ -207,7 +217,7 @@ if [ $BUILD_EXIST == true ]; then
         ./build.sh clean
     fi 
     ./build.sh 
-    ./build.sh jnlp-sign-all dist-war
+    ./build.sh jnlp-all dist-war
 else
     echo "[SADE BUILD] everything in place, no need to rebuild eXist"
 fi
@@ -264,7 +274,8 @@ fi
 
 echo "[SADE BUILD] building async version (servlet api3)"
 #mvn package -Dmaven.compiler.source=1.6 -Dmaven.compiler.target=1.6 -Ptext -Ppdf -Pservlet3 -Pcodec-bioformats -Pcodec-imagej -Pcodec-jai
-mvn package -Dmaven.compiler.source=1.6 -Dmaven.compiler.target=1.6 -Ptext -Ppdf -Pservlet3
+#mvn package -Dmaven.compiler.source=1.6 -Dmaven.compiler.target=1.6 -Ptext -Ppdf -Pservlet3
+mvn package
 
 cd $BUILDLOC/sade/webapps
 mkdir digitallibrary
@@ -275,7 +286,7 @@ unzip -q $BUILDLOC/digilib-$DIGILIB_CHANGESET/webapp/target/digilib*.war
 mkdir images
 mkdir scaled
 mkdir thumb
-sed -i 's/<parameter name="basedir-list" value="\/docuserver\/images:\/docuserver\/scaled\/small:\/docuserver\/scaled\/thumb" \/>/<parameter name="basedir-list" value="images:scaled:thumb" \/>/g' WEB-INF/digilib-config.xml
+#sed -i 's/<parameter name="basedir-list" value="\/docuserver\/images:\/docuserver\/scaled\/small:\/docuserver\/scaled\/thumb" \/>/<parameter name="basedir-list" value="images:scaled:thumb" \/>/g' WEB-INF/digilib-config.xml
 
 #####
 #
@@ -331,11 +342,12 @@ fi
 
 ###
 #
-# exist config modification
-# seems not neccessary in trunk anymore
+# exist config modification 
+# xslfo not needed anymore
 ###
-#cd $SCRIPTLOC
+cd $SCRIPTLOC
 #patch -p0 < sade-resources/existconf.xslfo.patch 
+patch -p0 < sade-resources/existconf.cqlparser.patch 
 
 ####
 #

@@ -12,11 +12,13 @@ import module namespace config="http://exist-db.org/xquery/apps/config" at "conf
 
 declare variable $templates:CONFIG_STOP_ON_ERROR := "stop-on-error";
 
-declare variable $templates:CONFIGURATION := QName("http://exist-db.org/xquery/templates", "configuration");
+declare variable $templates:CONFIGURATION := "configuration";
 declare variable $templates:CONFIGURATION_ERROR := QName("http://exist-db.org/xquery/templates", "ConfigurationError");
 declare variable $templates:NOT_FOUND := QName("http://exist-db.org/xquery/templates", "NotFound");
 declare variable $templates:TOO_MANY_ARGS := QName("http://exist-db.org/xquery/templates", "TooManyArguments");
 declare variable $templates:TYPE_ERROR := QName("http://exist-db.org/xquery/templates", "TypeError");
+
+declare variable $templates:ATTR_DATA_TEMPLATE := "data-template";
 
 (:~ 
  : Start processing the provided content. Template functions are looked up by calling the
@@ -64,16 +66,21 @@ declare function templates:process($nodes as node()*, $model as map(*)) {
             case document-node() return
                 for $child in $node/node() return templates:process($child, $model)
             case element() return
-                let $instructions := templates:get-instructions($node/@class)
+                let $dataAttr := $node/@data-template
                 return
-                    if ($instructions) then
-                        for $instruction in $instructions
-                        return
-                            templates:call($instruction, $node, $model)
+                    if ($dataAttr) then
+                        templates:call($dataAttr, $node, $model)
                     else
-                        element { node-name($node) } {
-                            $node/@*, for $child in $node/node() return templates:process($child, $model)
-                        }
+                        let $instructions := templates:get-instructions($node/@class)
+                        return
+                            if ($instructions) then
+                                for $instruction in $instructions
+                                return
+                                    templates:call($instruction, $node, $model)
+                            else
+                                element { node-name($node) } {
+                                    $node/@*, for $child in $node/node() return templates:process($child, $model)
+                                }
             default return
                 $node
 };
@@ -85,10 +92,24 @@ declare %private function templates:get-instructions($class as xs:string?) as xs
         $name
 };
 
-declare %private function templates:call($class as xs:string, $node as element(), $model as map(*)) {
-    let $paramStr := substring-after($class, "?")
-    let $parameters := templates:parse-parameters($paramStr)
-    let $func := if ($paramStr) then substring-before($class, "?") else $class
+declare %private function templates:call($classOrAttr as item(), $node as element(), $model as map(*)) {
+    let $parameters :=
+        typeswitch ($classOrAttr)
+            case attribute() return
+                templates:parameters-from-attr($node)
+            default return
+                let $paramStr := substring-after($classOrAttr, "?")
+                return
+                    templates:parse-parameters($paramStr)
+    let $func := 
+        typeswitch ($classOrAttr)
+            case attribute() return
+                $classOrAttr/string()
+            default return
+                if (contains($classOrAttr, "?")) then
+                    substring-before($classOrAttr, "?")
+                else
+                    $classOrAttr
     let $call := templates:resolve(10, $func, $model($templates:CONFIGURATION)("resolve"))
     return
         if (exists($call)) then
@@ -219,6 +240,19 @@ declare %private function templates:resolve($arity as xs:int, $func as xs:string
                 $fn
             else
                 templates:resolve($arity - 1, $func, $resolver)
+};
+
+declare %private function templates:parameters-from-attr($node as node()) as element(parameters) {   
+    <parameters>
+    {
+        for $attr in $node/@*[starts-with(local-name(.), $templates:ATTR_DATA_TEMPLATE)]
+        let $key := replace(local-name($attr), $templates:ATTR_DATA_TEMPLATE || "\-(.*)$", "$1")
+        let $value := $attr/string()
+        return
+            <param name="{$key}" value="{$value}"/>
+    }
+    </parameters>
+
 };
 
 declare %private function templates:parse-parameters($paramStr as xs:string?) as element(parameters) {
@@ -363,6 +397,16 @@ declare function templates:process-surround($node as node(), $content as node(),
             $node
 };
 
+declare 
+(:    %templates:wrap :)
+function templates:each($node as node(), $model as map(*), $from as xs:string, $to as xs:string) {
+    for $item in $model($from)
+    return
+        element { node-name($node) } {
+            $node/@*, templates:process($node/node(), map:new(($model, map:entry($to, $item))))
+        }
+};
+
 declare function templates:if-parameter-set($node as node(), $model as map(*), $param as xs:string) as node()* {
     let $param := request:get-parameter($param, ())
     return
@@ -418,36 +462,45 @@ declare function templates:load-source($node as node(), $model as map(*)) as nod
     values found in the request - if present.
  :)
 declare function templates:form-control($node as node(), $model as map(*)) as node()* {
-    typeswitch ($node)
-        case element(input) return
+    let $control := local-name($node)
+    return
+        switch ($control)
+        case "input" return
+            let $type := $node/@type
             let $name := $node/@name
             let $value := request:get-parameter($name, ())
             return
                 if ($value) then
-                    element { node-name($node) } {
-                        $node/@* except $node/@value,
-                        attribute value { $value },
-                        $node/node()
-                    }
+                    switch ($type)
+                        case "checkbox" case "radio" return
+                            element { node-name($node) } {
+                                $node/@* except $node/@checked,
+                                attribute checked { "checked" },
+                                $node/node()
+                            }
+                        default return
+                            element { node-name($node) } {
+                                $node/@* except $node/@value,
+                                attribute value { $value },
+                                $node/node()
+                            }
                 else
                     $node
-        case element(select) return
+        case "select" return
             let $value := request:get-parameter($node/@name/string(), ())
             return
                 element { node-name($node) } {
-                    $node/@* except $node/@class,
-                    for $option in $node/option
+                    $node/@*,
+                    for $option in $node/*[local-name(.) = "option"]
                     return
-                        <option>
-                        {
+                        element { node-name($option) } {
                             $option/@*,
-                            if ($option/@value = $value) then
+                            if ($option/@value = $value or $option/string() = $value) then
                                 attribute selected { "selected" }
                             else
                                 (),
                             $option/node()
                         }
-                        </option>
                 }
         default return
             $node

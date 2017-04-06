@@ -10,6 +10,8 @@ Build
 * Build the SADE modules for eXist with ant.
 * Build the distribution zip file with build.sh from dist-utils.
 
+Prepared builds are available via ci.de.dariah.eu: [![Build Status](https://ci.de.dariah.eu/jenkins/job/SADE/badge/icon)](https://ci.de.dariah.eu/jenkins/job/SADE)
+
 Configuration
 =============
 

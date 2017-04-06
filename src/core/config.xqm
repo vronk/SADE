@@ -341,7 +341,11 @@ declare function config:param-value($model as map(*), $param-key as xs:string) a
     config:param-value((),$model,'','',$param-key)
 };
 
-
+(:~ returns the value of a parameter, for a given module
+ :)
+declare function config:module-param-value($model as map(*), $module-key as xs:string, $param-key as xs:string) as item()* {
+    config:param-value((),$model,$module-key,'',$param-key)
+};
 
 (:~ gets both the project and module configs
   : @param $project project identifier

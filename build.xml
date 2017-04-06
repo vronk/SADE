@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="xar" name="packages">
 	
+   <property file="local.build.properties"/>
    <property file="build.properties"/>
 	
 	<import file="build_docs.xml" />   
@@ -9,9 +10,12 @@
 	<property name="build.dir" value="${basedir}/build"/>
 	<target name="xar">
 	  <ant dir="src"/>
-	  <ant dir="sample-projects"/>
+	  <!--ant dir="sample-projects"/-->
 	</target>
   <target name="clean">
     <delete dir="build"/>
+  </target>
+  <target name="sade-dist-build">
+    <ant antfile="dist-utils/antbuild/build.xml" inheritAll="false"/> 
   </target>
 </project>

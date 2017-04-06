@@ -17,8 +17,8 @@
     
     <!-- insert the values from build.properties into the xar meta files: repo.xml and expath-pkg.xml -->  
     <target name="configure-metafiles">
-        <copy file="repo.template.xml" tofile="repo.xml" overwrite="true"/>
-        <copy file="expath-pkg.template.xml" tofile="expath-pkg.xml" overwrite="true" />
+        <copy file="repo.template.xml" tofile="repo.xml" overwrite="${conf.overwrite}"/>
+        <copy file="expath-pkg.template.xml" tofile="expath-pkg.xml" overwrite="${conf.overwrite}"/>
         <replace dir="." includes="repo.xml expath-pkg.xml"
                 propertyFile="../build.properties">
                 <replacefilter 

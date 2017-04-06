@@ -1,0 +1,18 @@
+--- build/sade/webapps/exist/WEB-INF/conf.xml.orig	2013-04-24 18:54:03.959893264 +0200
++++ build/sade/webapps/exist/WEB-INF/conf.xml	2013-04-24 18:54:24.075894107 +0200
+@@ -820,6 +820,8 @@
+             <!-- XQDoc module: required for generating function documentation -->
+             <module uri="http://exist-db.org/xquery/xqdoc" class="org.exist.xqdoc.xquery.XQDocModule"/>
+ 
++            <module uri="http://exist-db.org/xquery/cqlparser" class="org.exist.xquery.modules.cqlparser.CQLParserModule" />
++
+             <!--
+             <module uri="http://exist-db.org/xquery/cssparser" class="org.exist.xquery.modules.cssparser.CSSParserModule"/>
+             <module uri="http://exist-db.org/xquery/backups"            class="org.exist.backup.xquery.BackupModule" />
+@@ -893,4 +895,4 @@
+     -->
+     <xupdate allowed-fragmentation="100" enable-consistency-checks="no"/>
+ 
+-</exist>
+\ Kein Zeilenumbruch am Dateiende.
++</exist>

@@ -1,0 +1,25 @@
+<config type="module">
+    <module key="faceted-search">
+        <param key="kwic-hits">3</param>
+        <param key="thumbnail">true</param>
+        <param key="hits-per-page">10</param>
+        <param key="query-root">
+            <xpath>//tei:TEI</xpath>
+        </param>
+        <param key="result-title">
+            <xpath>//tei:fileDesc//tei:titleStmt/tei:title/text()</xpath>
+        </param>
+        <!--param key="facets">
+            <facet key="keywords" title="Schlagwörter">
+                <xpath>tei:term</xpath>
+            </facet>
+            <facet key="dates" title="Zeit">
+                <xpath>tei:date/@when</xpath>
+            </facet>
+        </param-->
+    </module>
+    <!-- added by faceted search -->
+    <container key="html-head">
+        <script type="text/javascript" src="modules/faceted-search/js/bootstrap-paginator.min.js"/>
+    </container>
+</config>
